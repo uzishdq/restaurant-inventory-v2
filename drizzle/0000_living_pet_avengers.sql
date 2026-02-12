@@ -16,7 +16,7 @@ CREATE TABLE "category" (
 --> statement-breakpoint
 CREATE TABLE "goods_receipt_item" (
 	"id_receipt_item" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"receipt_id" varchar NOT NULL,
+	"receipt_id" varchar(20) NOT NULL,
 	"item_id" varchar(20) NOT NULL,
 	"qty_received" numeric NOT NULL,
 	"qty_damaged" numeric DEFAULT '0' NOT NULL
@@ -24,7 +24,7 @@ CREATE TABLE "goods_receipt_item" (
 --> statement-breakpoint
 CREATE TABLE "goods_receipt" (
 	"id_receipt" varchar(20) PRIMARY KEY NOT NULL,
-	"purchase_id" varchar NOT NULL,
+	"purchase_id" varchar(20) NOT NULL,
 	"received_by" uuid NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
@@ -74,6 +74,14 @@ CREATE TABLE "notifications" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "procurement_item" (
+	"id_procurement_item" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"procurement_id" varchar(20) NOT NULL,
+	"item_id" varchar(20) NOT NULL,
+	"qty_requested" numeric NOT NULL,
+	"notes" text
+);
+--> statement-breakpoint
 CREATE TABLE "procurement" (
 	"id_procurement" varchar(20) PRIMARY KEY NOT NULL,
 	"requested_by" uuid NOT NULL,
@@ -83,14 +91,15 @@ CREATE TABLE "procurement" (
 --> statement-breakpoint
 CREATE TABLE "purchase_item" (
 	"id_purchase_item" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"purchase_id" varchar NOT NULL,
+	"purchase_id" varchar(20) NOT NULL,
+	"procurement_item_id" uuid NOT NULL,
 	"item_id" varchar(20) NOT NULL,
 	"qty_ordered" numeric NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "purchase" (
 	"id_purchase" varchar(20) PRIMARY KEY NOT NULL,
-	"procurement_id" varchar NOT NULL,
+	"procurement_id" varchar(20) NOT NULL,
 	"supplier_id" uuid NOT NULL,
 	"status" "purchase_status" DEFAULT 'DRAFT' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
@@ -131,7 +140,7 @@ CREATE TABLE "user" (
 	CONSTRAINT "user_phone_unique" UNIQUE("phone")
 );
 --> statement-breakpoint
-ALTER TABLE "goods_receipt_item" ADD CONSTRAINT "goods_receipt_item_receipt_id_goods_receipt_id_receipt_fk" FOREIGN KEY ("receipt_id") REFERENCES "public"."goods_receipt"("id_receipt") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "goods_receipt_item" ADD CONSTRAINT "goods_receipt_item_receipt_id_goods_receipt_id_receipt_fk" FOREIGN KEY ("receipt_id") REFERENCES "public"."goods_receipt"("id_receipt") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "goods_receipt_item" ADD CONSTRAINT "goods_receipt_item_item_id_item_id_item_fk" FOREIGN KEY ("item_id") REFERENCES "public"."item"("id_item") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "goods_receipt" ADD CONSTRAINT "goods_receipt_purchase_id_purchase_id_purchase_fk" FOREIGN KEY ("purchase_id") REFERENCES "public"."purchase"("id_purchase") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "goods_receipt" ADD CONSTRAINT "goods_receipt_received_by_user_id_user_fk" FOREIGN KEY ("received_by") REFERENCES "public"."user"("id_user") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -144,8 +153,11 @@ ALTER TABLE "item" ADD CONSTRAINT "item_unit_id_unit_id_unit_fk" FOREIGN KEY ("u
 ALTER TABLE "item" ADD CONSTRAINT "item_category_id_category_id_category_fk" FOREIGN KEY ("category_id") REFERENCES "public"."category"("id_category") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_user_id_user_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id_user") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_supplier_id_supplier_id_supplier_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."supplier"("id_supplier") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "procurement_item" ADD CONSTRAINT "procurement_item_procurement_id_procurement_id_procurement_fk" FOREIGN KEY ("procurement_id") REFERENCES "public"."procurement"("id_procurement") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "procurement_item" ADD CONSTRAINT "procurement_item_item_id_item_id_item_fk" FOREIGN KEY ("item_id") REFERENCES "public"."item"("id_item") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "procurement" ADD CONSTRAINT "procurement_requested_by_user_id_user_fk" FOREIGN KEY ("requested_by") REFERENCES "public"."user"("id_user") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "purchase_item" ADD CONSTRAINT "purchase_item_purchase_id_purchase_id_purchase_fk" FOREIGN KEY ("purchase_id") REFERENCES "public"."purchase"("id_purchase") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "purchase_item" ADD CONSTRAINT "purchase_item_purchase_id_purchase_id_purchase_fk" FOREIGN KEY ("purchase_id") REFERENCES "public"."purchase"("id_purchase") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "purchase_item" ADD CONSTRAINT "purchase_item_procurement_item_id_procurement_item_id_procurement_item_fk" FOREIGN KEY ("procurement_item_id") REFERENCES "public"."procurement_item"("id_procurement_item") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "purchase_item" ADD CONSTRAINT "purchase_item_item_id_item_id_item_fk" FOREIGN KEY ("item_id") REFERENCES "public"."item"("id_item") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "purchase" ADD CONSTRAINT "purchase_procurement_id_procurement_id_procurement_fk" FOREIGN KEY ("procurement_id") REFERENCES "public"."procurement"("id_procurement") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "purchase" ADD CONSTRAINT "purchase_supplier_id_supplier_id_supplier_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."supplier"("id_supplier") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

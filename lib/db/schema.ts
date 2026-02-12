@@ -9,6 +9,10 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 
+// ══════════════════════════════════════════════════════════
+// ENUMS
+// ══════════════════════════════════════════════════════════
+
 // USER ROLE
 export const userRoleEnum = pgEnum("user_role", [
   "SUPER_ADMIN",
@@ -59,6 +63,29 @@ export const purchaseStatusEnum = pgEnum("purchase_status", [
   "COMPLETED",
   "CANCELLED",
 ]);
+
+export const notificationRecipientEnum = pgEnum("notification_recipient", [
+  "USER",
+  "SUPPLIER",
+]);
+
+export const notificationRefEnum = pgEnum("notification_ref", [
+  "PROCUREMENT",
+  "PURCHASE",
+  "RECEIPT",
+  "RETURN",
+]);
+
+export const statusNotificationEnum = pgEnum("status_notification", [
+  "PENDING",
+  "ONPROGRESS",
+  "SENT",
+  "FAILED",
+]);
+
+// ══════════════════════════════════════════════════════════
+// TABLES
+// ══════════════════════════════════════════════════════════
 
 export const userTable = pgTable("user", {
   idUser: uuid("id_user").defaultRandom().primaryKey(),
@@ -123,6 +150,10 @@ export const itemBomDetailTable = pgTable("item_bom_detail", {
   qty: numeric("qty").notNull(),
 });
 
+// ══════════════════════════════════════════════════════════
+// PROCUREMENT FLOW
+// ══════════════════════════════════════════════════════════
+
 export const procurementTable = pgTable("procurement", {
   idProcurement: varchar("id_procurement", { length: 20 }).primaryKey(),
   requestedBy: uuid("requested_by")
@@ -132,9 +163,21 @@ export const procurementTable = pgTable("procurement", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const procurementItemTable = pgTable("procurement_item", {
+  idProcurementItem: uuid("id_procurement_item").defaultRandom().primaryKey(),
+  procurementId: varchar("procurement_id", { length: 20 })
+    .references(() => procurementTable.idProcurement, { onDelete: "cascade" })
+    .notNull(),
+  itemId: varchar("item_id", { length: 20 })
+    .references(() => itemTable.idItem)
+    .notNull(),
+  qtyRequested: numeric("qty_requested").notNull(),
+  notes: text("notes"),
+});
+
 export const purchaseTable = pgTable("purchase", {
   idPurchase: varchar("id_purchase", { length: 20 }).primaryKey(),
-  procurementId: varchar("procurement_id")
+  procurementId: varchar("procurement_id", { length: 20 })
     .references(() => procurementTable.idProcurement)
     .notNull(),
   supplierId: uuid("supplier_id")
@@ -146,8 +189,11 @@ export const purchaseTable = pgTable("purchase", {
 
 export const purchaseItemTable = pgTable("purchase_item", {
   idPurchaseItem: uuid("id_purchase_item").defaultRandom().primaryKey(),
-  purchaseId: varchar("purchase_id")
-    .references(() => purchaseTable.idPurchase)
+  purchaseId: varchar("purchase_id", { length: 20 })
+    .references(() => purchaseTable.idPurchase, { onDelete: "cascade" })
+    .notNull(),
+  procurementItemId: uuid("procurement_item_id")
+    .references(() => procurementItemTable.idProcurementItem)
     .notNull(),
   itemId: varchar("item_id", { length: 20 })
     .references(() => itemTable.idItem)
@@ -157,7 +203,7 @@ export const purchaseItemTable = pgTable("purchase_item", {
 
 export const goodsReceiptTable = pgTable("goods_receipt", {
   idReceipt: varchar("id_receipt", { length: 20 }).primaryKey(),
-  purchaseId: varchar("purchase_id")
+  purchaseId: varchar("purchase_id", { length: 20 })
     .references(() => purchaseTable.idPurchase)
     .notNull(),
   receivedBy: uuid("received_by")
@@ -168,8 +214,8 @@ export const goodsReceiptTable = pgTable("goods_receipt", {
 
 export const goodsReceiptItemTable = pgTable("goods_receipt_item", {
   idReceiptItem: uuid("id_receipt_item").defaultRandom().primaryKey(),
-  receiptId: varchar("receipt_id")
-    .references(() => goodsReceiptTable.idReceipt)
+  receiptId: varchar("receipt_id", { length: 20 })
+    .references(() => goodsReceiptTable.idReceipt, { onDelete: "cascade" })
     .notNull(),
   itemId: varchar("item_id", { length: 20 })
     .references(() => itemTable.idItem)
@@ -203,25 +249,6 @@ export const itemMovementTable = pgTable("item_movement", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const notificationRecipientEnum = pgEnum("notification_recipient", [
-  "USER",
-  "SUPPLIER",
-]);
-
-export const notificationRefEnum = pgEnum("notification_ref", [
-  "PROCUREMENT",
-  "PURCHASE",
-  "RECEIPT",
-  "RETURN",
-]);
-
-export const statusNotificationEnum = pgEnum("status_notification", [
-  "PENDING",
-  "ONPROGRESS",
-  "SENT",
-  "FAILED",
-]);
-
 export const notificationsTable = pgTable("notifications", {
   idNotification: uuid("id_notification").defaultRandom().primaryKey(),
   recipientType: notificationRecipientEnum("recipient_type").notNull(),
@@ -234,7 +261,9 @@ export const notificationsTable = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ══════════════════════════════════════════════════════════
 // RELATIONS
+// ══════════════════════════════════════════════════════════
 
 export const userRelations = relations(userTable, ({ many }) => ({
   transactions: many(transactionTable),
@@ -268,6 +297,7 @@ export const itemRelations = relations(itemTable, ({ one, many }) => ({
   movements: many(itemMovementTable),
   boms: many(itemBomTable),
   bomDetails: many(itemBomDetailTable),
+  procurementItems: many(procurementItemTable),
   purchaseItems: many(purchaseItemTable),
   goodsReceiptItems: many(goodsReceiptItemTable),
 }));
@@ -301,8 +331,24 @@ export const procurementRelations = relations(
       fields: [procurementTable.requestedBy],
       references: [userTable.idUser],
     }),
+    items: many(procurementItemTable),
     purchases: many(purchaseTable),
     notifications: many(notificationsTable),
+  }),
+);
+
+export const procurementItemRelations = relations(
+  procurementItemTable,
+  ({ one, many }) => ({
+    procurement: one(procurementTable, {
+      fields: [procurementItemTable.procurementId],
+      references: [procurementTable.idProcurement],
+    }),
+    item: one(itemTable, {
+      fields: [procurementItemTable.itemId],
+      references: [itemTable.idItem],
+    }),
+    purchaseItems: many(purchaseItemTable),
   }),
 );
 
@@ -327,6 +373,10 @@ export const purchaseItemRelations = relations(
       fields: [purchaseItemTable.purchaseId],
       references: [purchaseTable.idPurchase],
     }),
+    procurementItem: one(procurementItemTable, {
+      fields: [purchaseItemTable.procurementItemId],
+      references: [procurementItemTable.idProcurementItem],
+    }),
     item: one(itemTable, {
       fields: [purchaseItemTable.itemId],
       references: [itemTable.idItem],
@@ -346,7 +396,7 @@ export const goodsReceiptRelations = relations(
       references: [userTable.idUser],
     }),
     items: many(goodsReceiptItemTable),
-    notifications: many(notificationsTable), // TAMBAHKAN
+    notifications: many(notificationsTable),
   }),
 );
 
