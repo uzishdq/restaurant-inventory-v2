@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { validatedQtySchema } from "./validation-helper";
+import { optionalStringSchema, validatedQtySchema } from "./validation-helper";
 
 // Procurement Schema
 export const createProcurementSchema = z.object({
@@ -7,8 +7,8 @@ export const createProcurementSchema = z.object({
     .array(
       z.object({
         itemId: z.string().min(1, "Pilih bahan baku"),
-        supplierId: z.uuid("Pilih supplier"),
-        qtyOrdered: validatedQtySchema("jumlah pesanan"),
+        qtyRequested: validatedQtySchema("jumlah pesanan"),
+        notes: optionalStringSchema(5, 255),
       }),
     )
     .min(1, "Detail bahan baku wajib diisi"),

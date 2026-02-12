@@ -55,6 +55,20 @@ export const validatedStringSchema = (min = 5, max = 50) =>
       "Gunakan hanya huruf, angka, spasi, titik, koma, atau garis miring.",
     );
 
+export const optionalStringSchema = (min = 5, max = 50) =>
+  z
+    .string()
+    .trim()
+    .refine(
+      (val) => val === "" || (val.length >= min && val.length <= max),
+      `Harus memiliki minimal ${min} dan maksimal ${max} karakter.`,
+    )
+    .refine(
+      (val) => val === "" || allowedRegex.test(val),
+      "Gunakan hanya huruf, angka, spasi, titik, koma, atau garis miring.",
+    )
+    .transform((val) => (val === "" ? "" : val));
+
 export const validatedPhoneSchema = z
   .string()
   .min(10, {
