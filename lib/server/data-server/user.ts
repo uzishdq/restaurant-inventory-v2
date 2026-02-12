@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { userTable } from "@/lib/db/schema";
 import { TUser } from "@/lib/type/type.user";
 import { LoginSchema } from "@/lib/validation/auth-validation";
+import { IdSchema } from "@/lib/validation/validation-helper";
 import bcrypt from "bcryptjs";
 import { asc, eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
@@ -72,6 +73,45 @@ export const getUserList = unstable_cache(
   ["get-user"],
   {
     tags: [CACHE_TAGS.master.user.list],
+    revalidate: 3600,
+  },
+);
+
+export const getUserById = unstable_cache(
+  async (idUser: string) => {
+    try {
+      const validateValues = IdSchema.safeParse({ id: idUser });
+
+      if (!validateValues.success) {
+        return { ok: false, data: null };
+      }
+
+      const [result] = await db
+        .select({
+          idUser: userTable.idUser,
+          username: userTable.username,
+          name: userTable.name,
+          phone: userTable.phone,
+          role: userTable.role,
+          createdAt: userTable.createdAt,
+        })
+        .from(userTable)
+        .where(eq(userTable.idUser, idUser))
+        .limit(1);
+
+      if (result) {
+        return { ok: true, data: result as TUser };
+      } else {
+        return { ok: true, data: null };
+      }
+    } catch (error) {
+      console.error("error user detail : ", error);
+      return { ok: false, data: null };
+    }
+  },
+  ["get-detail-user"],
+  {
+    tags: [CACHE_TAGS.master.user.detail],
     revalidate: 3600,
   },
 );

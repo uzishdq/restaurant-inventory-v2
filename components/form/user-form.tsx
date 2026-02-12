@@ -17,9 +17,18 @@ import {
 import { Input } from "../ui/input";
 import {
   CreateAccountSchema,
+  PasswordUpdateSchema,
+  ProfileUpdateSchema,
   RoleUpdateSchema,
+  UsernameUpdateSchema,
 } from "@/lib/validation/master-validation";
-import { createUser, updateRole } from "@/lib/server/action-server/user";
+import {
+  createUser,
+  updateAccount,
+  updatePassword,
+  updateRole,
+  updateUsername,
+} from "@/lib/server/action-server/user";
 import {
   Select,
   SelectContent,
@@ -29,6 +38,15 @@ import {
 } from "../ui/select";
 import { ROLE_SELECT } from "@/lib/constant";
 import { TUser } from "@/lib/type/type.user";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Label } from "../ui/label";
+import { signOut } from "next-auth/react";
 
 function CreateUserForm({
   onSuccess,
@@ -117,7 +135,7 @@ function CreateUserForm({
                 id={field.name}
                 aria-invalid={fieldState.invalid}
                 autoComplete="on"
-                type="number"
+                type="tel"
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -263,4 +281,355 @@ function UpdateRoleForm({
   );
 }
 
-export { CreateUserForm, UpdateRoleForm };
+function AccountForm({ data }: Readonly<{ data: TUser }>) {
+  const [isPending, startTransition] = React.useTransition();
+
+  const form = useForm<z.infer<typeof ProfileUpdateSchema>>({
+    resolver: zodResolver(ProfileUpdateSchema),
+    defaultValues: {
+      name: data.name,
+      phone: data.phone,
+    },
+    mode: "onChange",
+  });
+
+  const onSubmit = (values: z.infer<typeof ProfileUpdateSchema>) => {
+    startTransition(() => {
+      updateAccount(values).then((data) => {
+        if (data.ok) {
+          toast.success(data.message);
+        } else {
+          toast.error(data.message);
+        }
+      });
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Informasi Akun</CardTitle>
+        <CardDescription>
+          Periksa kembali data akun Anda. Jika sudah benar, tidak perlu
+          melakukan pengeditan.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
+          <FieldGroup>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
+                <Input
+                  id="username"
+                  autoComplete="off"
+                  value={data.username}
+                  disabled
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="role">Role</FieldLabel>
+                <Input
+                  id="role"
+                  autoComplete="off"
+                  value={data.role}
+                  disabled
+                />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Controller
+                name="name"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Nama</FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete="on"
+                      type="text"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="phone"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>No.Telp</FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete="on"
+                      type="tel"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
+
+            <Field>
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "Loading..." : "Update"}
+              </Button>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AccountResetUsername() {
+  const [isPending, startTransition] = React.useTransition();
+
+  const form = useForm<z.infer<typeof UsernameUpdateSchema>>({
+    resolver: zodResolver(UsernameUpdateSchema),
+    defaultValues: {
+      oldUsername: "",
+      newUsername: "",
+    },
+    mode: "onChange",
+  });
+
+  const onSubmit = (values: z.infer<typeof UsernameUpdateSchema>) => {
+    startTransition(() => {
+      updateUsername(values).then((data) => {
+        if (data.ok) {
+          form.reset();
+          toast.success(data.message);
+          setTimeout(() => {
+            signOut();
+          }, 500);
+        } else {
+          toast.error(data.message);
+        }
+      });
+    });
+  };
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Ubah Username</CardTitle>
+        <CardDescription>
+          Masukkan username saat ini dan username baru untuk memperbarui
+          informasi akun Anda.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
+          <FieldGroup>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Controller
+                name="oldUsername"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>
+                      Username Saat ini
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete="on"
+                      type="text"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="newUsername"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Username Baru</FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete="on"
+                      type="text"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
+
+            <Field>
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "Loading..." : "Update Username"}
+              </Button>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AccountResetPassword() {
+  const [showPasswords, setShowPasswords] = React.useState<boolean>(false);
+  const [isPending, startTransition] = React.useTransition();
+
+  const form = useForm<z.infer<typeof PasswordUpdateSchema>>({
+    resolver: zodResolver(PasswordUpdateSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      newConfirmPassword: "",
+    },
+    mode: "onChange",
+  });
+
+  const onSubmit = (values: z.infer<typeof PasswordUpdateSchema>) => {
+    startTransition(() => {
+      updatePassword(values).then((data) => {
+        if (data.ok) {
+          form.reset();
+          toast.success(data.message);
+          setTimeout(() => {
+            signOut();
+          }, 500);
+        } else {
+          toast.error(data.message);
+        }
+      });
+    });
+  };
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Ubah Password</CardTitle>
+        <CardDescription>
+          Masukkan password saat ini dan password baru untuk memperbarui
+          keamanan akun Anda.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="flex flex-col gap-6"
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
+          <FieldGroup>
+            <Controller
+              name="oldPassword"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>
+                    Password Saat ini
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    autoComplete="on"
+                    type={showPasswords ? "text" : "password"}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Controller
+                name="newPassword"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Password Baru</FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete="on"
+                      type={showPasswords ? "text" : "password"}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="newConfirmPassword"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>
+                      Konfirmasi Password Baru
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete="on"
+                      type={showPasswords ? "text" : "password"}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Input
+                id="show-password"
+                type="checkbox"
+                className="h-4 w-4"
+                onChange={(e) => setShowPasswords(e.target.checked)}
+              />
+              <Label htmlFor="show-password" className="text-sm">
+                Tampilkan password
+              </Label>
+            </div>
+
+            <Field>
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "Loading..." : "Reset Password"}
+              </Button>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+export {
+  CreateUserForm,
+  UpdateRoleForm,
+  AccountForm,
+  AccountResetUsername,
+  AccountResetPassword,
+};

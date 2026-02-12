@@ -4,6 +4,7 @@ import {
   enumTypeItem,
   IdItemSchema,
   IdSchema,
+  password,
   username,
   validatedPhoneSchema,
   validatedQtySchema,
@@ -45,6 +46,36 @@ export const CreateAccountSchema = z.object({
 export const RoleUpdateSchema = IdSchema.extend({
   role: z.enum(enumRole, { error: "Tidak Boleh Kosong" }),
 });
+
+export const ProfileUpdateSchema = z.object({
+  name: validatedStringSchema(5, 50),
+  phone: validatedPhoneSchema,
+});
+
+export const UsernameUpdateSchema = z
+  .object({
+    oldUsername: username,
+    newUsername: username,
+  })
+  .refine((data) => data.oldUsername !== data.newUsername, {
+    message: "Username baru harus berbeda dari username saat ini.",
+    path: ["newUsername"],
+  });
+
+export const PasswordUpdateSchema = z
+  .object({
+    oldPassword: password,
+    newPassword: password,
+    newConfirmPassword: password,
+  })
+  .refine((data) => data.oldPassword !== data.newPassword, {
+    message: "Password baru harus berbeda dari password saat ini.",
+    path: ["newPassword"],
+  })
+  .refine((data) => data.newPassword === data.newConfirmPassword, {
+    message: "Passwords tidak cocok",
+    path: ["newConfirmPassword"],
+  });
 
 /* -------- BAHAN BAKU --------  */
 

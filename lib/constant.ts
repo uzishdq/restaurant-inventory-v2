@@ -6,8 +6,10 @@ export const ROUTES = {
   },
   AUTH: {
     DASHBOARD: "/dashboard",
-    ACCOUNT: "/dashboard/account",
-    NOTIFICATION: "/dashboard/notification",
+    ACCOUNT: {
+      INDEX: "/account",
+      NOTIFICATION: "/account/notification",
+    },
     MASTER: {
       USERS: "/master/users",
       SUPPLIER: "/master/suppliers",
