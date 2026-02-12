@@ -34,6 +34,7 @@ export const ROUTES = {
       },
     },
     PROCUREMENT: {
+      INDEX: "/procurement",
       CREATE: "/procurement/create",
     },
     REPORT: {
@@ -241,6 +242,13 @@ export const CACHE_TAGS = {
       kode: "last-code-user",
       list: "get-user",
       detail: "get-detail-user",
+    },
+  },
+  transaction: {
+    procurement: {
+      kode: "last-code-procurement",
+      list: "get-procurement",
+      detail: "get-detail-procurement",
     },
   },
 } as const;

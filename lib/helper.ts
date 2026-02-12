@@ -50,19 +50,7 @@ export function getFilteredNav(role?: roleType) {
       items: [
         {
           title: "Pengajuan Pembelian",
-          url: ROUTES.AUTH.REPORT.TRANSACTION,
-        },
-        {
-          title: "Persetujuan Pembelian",
-          url: ROUTES.AUTH.REPORT.ITEM,
-        },
-        {
-          title: "Daftar Pembelian",
-          url: ROUTES.AUTH.REPORT.ITEM,
-        },
-        {
-          title: "Penerimaan Bahan Baku",
-          url: ROUTES.AUTH.REPORT.ITEM,
+          url: ROUTES.AUTH.PROCUREMENT.INDEX,
         },
       ],
     },
@@ -185,6 +173,22 @@ export function generateItemId({
 
   const nextNumber = currentNumber + 1;
   const padded = nextNumber.toString().padStart(digitLength, "0");
+
+  return prefix + padded;
+}
+
+export function generateProcurementId(lastId: string | null): string {
+  const prefix = "PR-";
+
+  if (!lastId) {
+    return `${prefix}0001`;
+  }
+
+  const numberPart = lastId.replace(prefix, "");
+  const currentNumber = Number.parseInt(numberPart, 10);
+
+  const nextNumber = currentNumber + 1;
+  const padded = nextNumber.toString().padStart(4, "0");
 
   return prefix + padded;
 }

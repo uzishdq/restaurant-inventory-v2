@@ -7,6 +7,9 @@ import {
 } from "@/lib/validation/procurement-validation";
 import { LABEL } from "@/lib/constant";
 import { requireRole } from "./req-role";
+import { getProcerumentId } from "../data-server/procurement";
+import { generateProcurementId } from "@/lib/helper";
+import { procurementItemTable, procurementTable } from "@/lib/db/schema";
 
 export const createProcurement = async (values: CreateProcurementValues) => {
   try {
@@ -21,6 +24,25 @@ export const createProcurement = async (values: CreateProcurementValues) => {
     if (!authResult.ok || !authResult.session) {
       return { ok: false, message: authResult.message };
     }
+
+    const lastId = await getProcerumentId();
+    const newProcurementId = generateProcurementId(lastId);
+
+    await db.transaction(async (tx) => {
+      await tx.insert(procurementTable).values({
+        idProcurement: newProcurementId,
+        requestedBy: authResult.session.user.id,
+      });
+
+      const procurementValues = validated.data.items.map((item) => ({
+        procurementId: newProcurementId,
+        itemId: item.itemId,
+        qtyRequested: item.qtyRequested,
+        notes: item.notes,
+      }));
+
+      await tx.insert(procurementItemTable).values(procurementValues);
+    });
 
     return {
       ok: true,
