@@ -14,13 +14,14 @@ import React from "react";
 
 export default async function ProcurementPage() {
   const [items, suppliers] = await Promise.all([
-    getSelectItem(),
+    getSelectItem("RAW_MATERIAL"),
     getSupplierList(),
   ]);
 
   if (!items.ok || !items.data || !suppliers.data) {
     return RenderError(LABEL.ERROR.DESCRIPTION);
   }
+
   return (
     <section>
       <Card className="w-full">

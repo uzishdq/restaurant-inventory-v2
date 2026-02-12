@@ -12,6 +12,8 @@ export type RoleGroup = "ADMIN_ONLY" | "KITCHEN_ONLY" | "MANAGEMENT" | "ALL";
 
 export type typeItems = "RAW_MATERIAL" | "WORK_IN_PROGRESS" | "FINISHED_GOOD";
 
+type typeGetItem = typeItems | "ALL";
+
 export type statusProcurement =
   | "DRAFT"
   | "ON_PROGRESS"

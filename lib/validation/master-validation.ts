@@ -84,3 +84,9 @@ export const CreateItemSchema = z
 export const DeleteItemSchema = z.object({
   id: IdItemSchema,
 });
+
+export const TypeItemSchema = z.object({
+  type: z.enum([...enumTypeItem, "ALL"], {
+    error: "Pilih tipe item",
+  }),
+});

@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Database, Files } from "lucide-react";
+import { ArrowRightLeft, Database, Files, PackagePlus } from "lucide-react";
 import { ROUTE_TITLES, ROUTES } from "./constant";
 import { roleType, typeItems } from "./type/type.helper";
 
@@ -40,6 +40,29 @@ export function getFilteredNav(role?: roleType) {
         {
           title: "Supplier",
           url: ROUTES.AUTH.MASTER.SUPPLIER,
+        },
+      ],
+    },
+    {
+      title: "Pengadaan",
+      url: "#",
+      icon: PackagePlus,
+      items: [
+        {
+          title: "Pengajuan Pembelian",
+          url: ROUTES.AUTH.REPORT.TRANSACTION,
+        },
+        {
+          title: "Persetujuan Pembelian",
+          url: ROUTES.AUTH.REPORT.ITEM,
+        },
+        {
+          title: "Daftar Pembelian",
+          url: ROUTES.AUTH.REPORT.ITEM,
+        },
+        {
+          title: "Penerimaan Bahan Baku",
+          url: ROUTES.AUTH.REPORT.ITEM,
         },
       ],
     },

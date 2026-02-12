@@ -9,8 +9,9 @@ import {
   itemTable,
   unitTable,
 } from "@/lib/db/schema";
-import { typeItems } from "@/lib/type/type.helper";
+import { typeGetItem, typeItems } from "@/lib/type/type.helper";
 import { TItem, TItemSelect } from "@/lib/type/type.item";
+import { TypeItemSchema } from "@/lib/validation/master-validation";
 import { desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { unstable_cache } from "next/cache";
@@ -129,8 +130,14 @@ export const getItemList = unstable_cache(
 );
 
 export const getSelectItem = unstable_cache(
-  async () => {
+  async (type: typeGetItem) => {
     try {
+      const validated = TypeItemSchema.safeParse({ type: type });
+
+      if (!validated.success) {
+        return { ok: false, data: null };
+      }
+
       const result = await db
         .select({
           idItem: itemTable.idItem,
@@ -138,7 +145,8 @@ export const getSelectItem = unstable_cache(
           unitName: unitTable.name,
         })
         .from(itemTable)
-        .leftJoin(unitTable, eq(itemTable.unitId, unitTable.idUnit));
+        .leftJoin(unitTable, eq(itemTable.unitId, unitTable.idUnit))
+        .where(type === "ALL" ? undefined : eq(itemTable.type, type));
 
       if (result.length > 0) {
         return { ok: true, data: result as TItemSelect[] };
