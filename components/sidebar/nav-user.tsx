@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SignOutItem } from "./signout-item";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constant";
+import RevalidateButton from "./revalidate-button";
 
 export function NavUser({
   user,
@@ -65,6 +66,7 @@ export function NavUser({
                   Account
                 </Link>
               </DropdownMenuItem>
+              <RevalidateButton />
               <DropdownMenuItem asChild>
                 <Link href={ROUTES.AUTH.ACCOUNT.NOTIFICATION}>
                   <Bell />

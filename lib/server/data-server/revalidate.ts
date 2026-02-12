@@ -22,9 +22,3 @@ export function invalidateUser() {
   revalidateTag(CACHE_TAGS.master.user.list, { expire: 0 });
   revalidateTag(CACHE_TAGS.master.user.detail, { expire: 0 });
 }
-
-export function invalidateTransaction() {
-  revalidateTag(CACHE_TAGS.transaction.kode, { expire: 0 });
-  revalidateTag(CACHE_TAGS.transaction.list, { expire: 0 });
-  revalidateTag(CACHE_TAGS.transaction.detail, { expire: 0 });
-}

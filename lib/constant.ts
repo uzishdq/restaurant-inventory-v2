@@ -243,11 +243,6 @@ export const CACHE_TAGS = {
       detail: "get-detail-user",
     },
   },
-  transaction: {
-    kode: "last-code-transaction",
-    list: "get-transaction",
-    detail: "get-detail-transaction",
-  },
 } as const;
 
 export const ROLE_GROUP: Record<RoleGroup, readonly roleType[]> = {
