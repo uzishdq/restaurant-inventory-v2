@@ -11,7 +11,7 @@ export const createProcurementSchema = z.object({
         qtyOrdered: validatedQtySchema("jumlah pesanan"),
       }),
     )
-    .min(1, "Minimal 1 bahan baku harus dipilih"),
+    .min(1, "Detail bahan baku wajib diisi"),
 });
 
 export type CreateProcurementValues = z.infer<typeof createProcurementSchema>;

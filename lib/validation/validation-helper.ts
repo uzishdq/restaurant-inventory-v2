@@ -73,7 +73,7 @@ export const validatedPhoneSchema = z
 export const validatedQtySchema = (label: string, min = 0.01, max = 5000) =>
   z
     .string()
-    .regex(/^\d+(\.\d+)?$/, `${label} harus berupa angka`)
+    .regex(/^\d+(\.\d+)?$/, `${label} wajib diisi`)
     .refine((val) => Number.parseFloat(val) >= min, {
       message: `${label} minimal ${min}`,
     })

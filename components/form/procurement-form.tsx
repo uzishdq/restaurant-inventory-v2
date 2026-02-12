@@ -88,51 +88,54 @@ function ProcurementItemRow({
   const fieldError = errors.items?.[idx];
 
   return (
-    <div className="grid gap-4 rounded-lg border p-4 sm:grid-cols-[2fr,140px,auto] sm:items-end">
-      <Controller
-        name={`items.${idx}.itemId`}
-        control={control}
-        render={({ field, fieldState }) => (
-          <CustomSelect
-            items={availableItems}
-            valueField="idItem"
-            labelField="name"
-            label="Bahan Baku"
-            placeholder="Pilih Bahan Baku"
-            field={field}
-            fieldState={fieldState}
-          />
-        )}
-      />
+    <div className="grid gap-4 rounded-lg border p-2 sm:grid-cols-[2fr,140px,auto] sm:items-end">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+        <Controller
+          name={`items.${idx}.itemId`}
+          control={control}
+          render={({ field, fieldState }) => (
+            <CustomSelect
+              items={availableItems}
+              valueField="idItem"
+              labelField="name"
+              label="Bahan Baku"
+              placeholder="Pilih Bahan Baku"
+              field={field}
+              fieldState={fieldState}
+            />
+          )}
+        />
 
-      <Controller
-        name={`items.${idx}.qtyOrdered`}
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>
-              Jumlah Pesanan {selectedItem ? `(${selectedItem.unitName})` : ""}
-            </FieldLabel>
-            <Input
-              {...field}
-              type="number"
-              step="0.01"
-              min="0.01"
-              aria-invalid={fieldState.invalid}
-              placeholder="0"
-            />
-            <FieldError
-              errors={fieldState.error ? [fieldState.error] : undefined}
-            />
-          </Field>
-        )}
-      />
+        <Controller
+          name={`items.${idx}.qtyOrdered`}
+          control={control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel>
+                Jumlah Pesanan{" "}
+                {selectedItem ? `(${selectedItem.unitName})` : ""}
+              </FieldLabel>
+              <Input
+                {...field}
+                type="number"
+                step="0.01"
+                min="0.01"
+                aria-invalid={fieldState.invalid}
+                placeholder="0"
+              />
+              <FieldError
+                errors={fieldState.error ? [fieldState.error] : undefined}
+              />
+            </Field>
+          )}
+        />
+      </div>
 
       <Button
         type="button"
         variant="destructive"
         size="icon"
-        className="w-full mb-2 sm:mb-0"
+        className="w-full mt-2"
         onClick={onRemove}
         aria-label="Hapus item"
       >
@@ -189,9 +192,9 @@ function SupplierGroup({
 
   return (
     <div className="space-y-4 rounded-lg border-2 border-primary/20 p-5 bg-primary/5">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+          <div className="hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
             <span className="text-lg font-semibold text-primary">
               {supplierInitial}
             </span>
@@ -210,8 +213,8 @@ function SupplierGroup({
             size="sm"
             onClick={addItemToGroup}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah
+            <Plus className="h-4 w-4" />
+            <span className="hidden md:block">Tambah</span>
           </Button>
           <Button
             type="button"
@@ -219,13 +222,13 @@ function SupplierGroup({
             size="sm"
             onClick={onRemoveGroup}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Hapus
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden md:block">Hapus</span>
           </Button>
         </div>
       </div>
 
-      <div className="space-y-3 pl-1">
+      <div className="space-y-3">
         {groupIndices.map((itemIdx) => (
           <ProcurementItemRow
             key={itemIdx}
