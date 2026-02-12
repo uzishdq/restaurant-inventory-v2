@@ -6,6 +6,7 @@ import {
   categoryTable,
   itemBomDetailTable,
   itemBomTable,
+  itemMovementTable,
   itemTable,
   unitTable,
 } from "@/lib/db/schema";
@@ -31,6 +32,37 @@ export const getItemId = async (type: typeItems) => {
 export const getItemList = unstable_cache(
   async () => {
     try {
+      const movementSummary = await db
+        .select({
+          itemId: itemMovementTable.itemId,
+          currentStock: sql<string>`
+            COALESCE(
+              SUM(
+                CASE 
+                  WHEN ${itemMovementTable.type} = 'IN' THEN ${itemMovementTable.quantity}::numeric
+                  WHEN ${itemMovementTable.type} = 'OUT' THEN -${itemMovementTable.quantity}::numeric
+                  ELSE 0
+                END
+              ), 0
+            )
+          `.as("current_stock"),
+          lastMovementDate: sql<Date | null>`
+            MAX(${itemMovementTable.createdAt})
+          `.as("last_movement_date"),
+        })
+        .from(itemMovementTable)
+        .groupBy(itemMovementTable.itemId);
+
+      const stockMap = new Map(
+        movementSummary.map((m) => [
+          m.itemId,
+          {
+            currentStock: m.currentStock,
+            lastMovementDate: m.lastMovementDate,
+          },
+        ]),
+      );
+
       const rawResult = await db
         .select({
           idItem: itemTable.idItem,
@@ -77,11 +109,12 @@ export const getItemList = unstable_cache(
           eq(sql`raw_item.category_id`, sql`raw_category.id_category`),
         );
 
-      // Transform ke TItem[]
       const itemMap = new Map<string, TItem>();
 
       rawResult.forEach((row) => {
         if (!itemMap.has(row.idItem)) {
+          const stockData = stockMap.get(row.idItem);
+
           itemMap.set(row.idItem, {
             idItem: row.idItem,
             name: row.name,
@@ -91,12 +124,13 @@ export const getItemList = unstable_cache(
             unitName: row.unitName,
             type: row.type,
             minStock: row.minStock,
+            currentStock: stockData?.currentStock || "0",
+            lastMovementDate: stockData?.lastMovementDate || null,
             createdAt: row.createdAt,
             detailItem: [],
           });
         }
 
-        // Tambahkan detail jika ada
         if (row.bomId && row.rawItemId) {
           itemMap.get(row.idItem)!.detailItem.push({
             idBom: row.bomId,
@@ -138,7 +172,29 @@ export const getSelectItem = unstable_cache(
         return { ok: false, data: null };
       }
 
-      const result = await db
+      const movementSummary = await db
+        .select({
+          itemId: itemMovementTable.itemId,
+          currentStock: sql<string>`
+            COALESCE(
+              SUM(
+                CASE 
+                  WHEN ${itemMovementTable.type} = 'IN' THEN ${itemMovementTable.quantity}::numeric
+                  WHEN ${itemMovementTable.type} = 'OUT' THEN -${itemMovementTable.quantity}::numeric
+                  ELSE 0
+                END
+              ), 0
+            )
+          `.as("current_stock"),
+        })
+        .from(itemMovementTable)
+        .groupBy(itemMovementTable.itemId);
+
+      const stockMap = new Map(
+        movementSummary.map((m) => [m.itemId, m.currentStock]),
+      );
+
+      const Items = await db
         .select({
           idItem: itemTable.idItem,
           name: itemTable.name,
@@ -148,8 +204,15 @@ export const getSelectItem = unstable_cache(
         .leftJoin(unitTable, eq(itemTable.unitId, unitTable.idUnit))
         .where(type === "ALL" ? undefined : eq(itemTable.type, type));
 
+      const result: TItemSelect[] = Items.map((item) => ({
+        idItem: item.idItem,
+        name: item.name,
+        unitName: item.unitName,
+        currentStock: stockMap.get(item.idItem) || "0",
+      }));
+
       if (result.length > 0) {
-        return { ok: true, data: result as TItemSelect[] };
+        return { ok: true, data: result };
       } else {
         return { ok: true, data: [] };
       }

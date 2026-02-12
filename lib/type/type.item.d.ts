@@ -19,6 +19,8 @@ export type TItem = {
   unitName: string | null;
   type: typeItems;
   minStock: string;
+  currentStock: string;
+  lastMovementDate: Date | null;
   createdAt: Date;
   detailItem: TDetailItem[];
 };
@@ -26,5 +28,6 @@ export type TItem = {
 export type TItemSelect = {
   idItem: string;
   name: string;
+  currentStock: string;
   unitName: string | null;
 };
