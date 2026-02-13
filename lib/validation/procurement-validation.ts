@@ -1,12 +1,17 @@
 import { z } from "zod";
-import { optionalStringSchema, validatedQtySchema } from "./validation-helper";
+import {
+  IdItemSchema,
+  IdProcurementSchema,
+  optionalStringSchema,
+  validatedQtySchema,
+} from "./validation-helper";
 
 // Procurement Schema
 export const createProcurementSchema = z.object({
   items: z
     .array(
       z.object({
-        itemId: z.string().min(1, "Pilih bahan baku"),
+        itemId: IdItemSchema,
         qtyRequested: validatedQtySchema("jumlah pesanan"),
         notes: optionalStringSchema(5, 255),
       }),
@@ -16,48 +21,25 @@ export const createProcurementSchema = z.object({
 
 export type CreateProcurementValues = z.infer<typeof createProcurementSchema>;
 
-// Goods Receipt Schema
-export const createGoodsReceiptSchema = z
-  .object({
-    purchaseId: z.string().min(1, "Purchase ID diperlukan"),
-    items: z
-      .array(
-        z.object({
-          itemId: z.string().min(1, "Item ID diperlukan"),
-          qtyReceived: z
-            .string()
-            .regex(/^\d+(\.\d+)?$/, "Qty harus berupa angka")
-            .refine(
-              (val) => Number.parseFloat(val) >= 0,
-              "Qty tidak boleh negatif",
-            ),
-          qtyDamaged: z
-            .string()
-            .regex(/^\d+(\.\d+)?$/, "Qty harus berupa angka")
-            .refine(
-              (val) => Number.parseFloat(val) >= 0,
-              "Qty tidak boleh negatif",
-            )
-            .default("0"),
-          qtyOrdered: z.string(), // untuk validasi
-        }),
-      )
-      .min(1, "Minimal 1 item"),
-  })
-  .refine(
-    (data) => {
-      // Validasi: qtyReceived + qtyDamaged tidak boleh > qtyOrdered
-      return data.items.every((item) => {
-        const received = Number.parseFloat(item.qtyReceived);
-        const damaged = Number.parseFloat(item.qtyDamaged);
-        const ordered = Number.parseFloat(item.qtyOrdered);
-        return received + damaged <= ordered;
-      });
-    },
-    {
-      message: "Total qty received + damaged tidak boleh melebihi qty ordered",
-      path: ["items"],
-    },
-  );
+// Verif Procurement Schema
+export const verifyProcurementSchema = z.object({
+  procurementId: IdProcurementSchema,
+  assignments: z
+    .array(
+      z.object({
+        supplierId: z.uuid("Pilih Supplier"),
+        items: z
+          .array(
+            z.object({
+              procurementItemId: z.uuid("Procurement item ID wajib"),
+              itemId: IdItemSchema,
+              qtyOrdered: validatedQtySchema("jumlah dipesan"),
+            }),
+          )
+          .min(1, "Minimal 1 item per supplier"),
+      }),
+    )
+    .min(1, "Minimal 1 supplier harus dipilih"),
+});
 
-export type CreateGoodsReceiptValues = z.infer<typeof createGoodsReceiptSchema>;
+export type VerifyProcurementValues = z.infer<typeof verifyProcurementSchema>;

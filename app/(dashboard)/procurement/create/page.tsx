@@ -5,7 +5,7 @@ import { LABEL } from "@/lib/constant";
 import { getSelectItem } from "@/lib/server/data-server/item";
 import { getSupplierList } from "@/lib/server/data-server/supplier";
 
-export default async function ProcurementPage() {
+export default async function CreateProcurementPage() {
   const [items, suppliers] = await Promise.all([
     getSelectItem("RAW_MATERIAL"),
     getSupplierList(),

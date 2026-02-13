@@ -10,6 +10,7 @@ import {
   unitTable,
   userTable,
 } from "@/lib/db/schema";
+import { isProcurementId } from "@/lib/helper";
 import { TProcerement } from "@/lib/type/type.procurement";
 import { desc, eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
@@ -92,13 +93,96 @@ export const getProcerumentList = unstable_cache(
         return { ok: true, data: [] };
       }
     } catch (error) {
-      console.error("error get unit data : ", error);
+      console.error("error get procurement data : ", error);
       return { ok: false, data: null };
     }
   },
   ["get-procurement"],
   {
     tags: [CACHE_TAGS.transaction.procurement.list],
+    revalidate: 3600,
+  },
+);
+
+export const getProcerumentById = unstable_cache(
+  async (id: string) => {
+    try {
+      if (!isProcurementId(id)) {
+        return { ok: false, data: null };
+      }
+
+      const rows = await db
+        .select({
+          idProcurement: procurementTable.idProcurement,
+          requestedBy: userTable.name,
+          status: procurementTable.status,
+          createdAt: procurementTable.createdAt,
+          idProcurementItem: procurementItemTable.idProcurementItem,
+          itemId: procurementItemTable.itemId,
+          itemName: itemTable.name,
+          categoryName: categoryTable.name,
+          unitName: unitTable.name,
+          qtyRequested: procurementItemTable.qtyRequested,
+          notes: procurementItemTable.notes,
+        })
+        .from(procurementTable)
+        .leftJoin(userTable, eq(procurementTable.requestedBy, userTable.idUser))
+        .leftJoin(
+          procurementItemTable,
+          eq(
+            procurementTable.idProcurement,
+            procurementItemTable.procurementId,
+          ),
+        )
+        .leftJoin(itemTable, eq(procurementItemTable.itemId, itemTable.idItem))
+        .leftJoin(unitTable, eq(itemTable.unitId, unitTable.idUnit))
+        .leftJoin(
+          categoryTable,
+          eq(itemTable.categoryId, categoryTable.idCategory),
+        )
+        .where(eq(procurementTable.idProcurement, id));
+
+      const grouped = rows.reduce<Record<string, TProcerement>>((acc, row) => {
+        if (!acc[row.idProcurement]) {
+          acc[row.idProcurement] = {
+            idProcurement: row.idProcurement,
+            requestedBy: row.requestedBy,
+            status: row.status,
+            createdAt: row.createdAt,
+            procurementItem: [],
+          };
+        }
+
+        if (row.idProcurementItem) {
+          acc[row.idProcurement].procurementItem.push({
+            idProcurementItem: row.idProcurementItem,
+            itemId: row.itemId ?? "-",
+            itemName: row.itemName ?? "-",
+            categoryName: row.categoryName ?? "-",
+            unitName: row.unitName ?? "-",
+            qtyRequested: row.qtyRequested ?? "-",
+            notes: row.notes ?? "-",
+          });
+        }
+
+        return acc;
+      }, {});
+
+      const result = Object.values(grouped)[0] ?? null;
+
+      if (result) {
+        return { ok: true, data: result };
+      } else {
+        return { ok: true, data: null };
+      }
+    } catch (error) {
+      console.error("error get procurement data by id: ", error);
+      return { ok: false, data: null };
+    }
+  },
+  ["get-detail-procurement"],
+  {
+    tags: [CACHE_TAGS.transaction.procurement.detail],
     revalidate: 3600,
   },
 );

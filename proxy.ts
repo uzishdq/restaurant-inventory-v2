@@ -31,8 +31,8 @@ function hasAccess(role: roleType | undefined, pathname: string): boolean {
     const allowedPrefixes = [
       ROUTES.AUTH.REPORT.TRANSACTION,
       ROUTES.AUTH.REPORT.ITEM,
-      ROUTES.AUTH.ACCOUNT,
-      ROUTES.AUTH.NOTIFICATION,
+      ROUTES.AUTH.ACCOUNT.INDEX,
+      ROUTES.AUTH.ACCOUNT.NOTIFICATION,
       ROUTES.AUTH.DASHBOARD,
     ];
 
@@ -86,6 +86,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/master/:path*",
+    "/procurement/:path*",
     "/transaction/:path*",
     "/report/:path*",
     // tambah route lain kalau perlu

@@ -36,6 +36,7 @@ export const ROUTES = {
     PROCUREMENT: {
       INDEX: "/procurement",
       CREATE: "/procurement/create",
+      UPDATE: (id: string) => `/procurement/update/${id}`,
     },
     REPORT: {
       TRANSACTION: "/report/transaction",
@@ -63,6 +64,11 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
 
   // Procurement
   { pattern: /^\/procurement\/create$/, title: "Pengadaan Bahan Baku" },
+  {
+    pattern: /^\/procurement\/update\/[^/]+$/,
+    title: "Verifikasi Pengadaan Bahan Baku",
+  },
+  { pattern: /^\/procurement$/, title: "Pengadaan Bahan Baku" },
 
   // Transaction
   { pattern: /^\/dashboard\/create-transaction$/, title: "Buat Transaksi" },

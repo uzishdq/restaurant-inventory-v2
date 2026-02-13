@@ -1,6 +1,6 @@
 import { ArrowRightLeft, Database, Files, PackagePlus } from "lucide-react";
 import { ROUTE_TITLES, ROUTES } from "./constant";
-import { roleType, typeItems } from "./type/type.helper";
+import { prefixProcurementType, roleType, typeItems } from "./type/type.helper";
 
 export function getPageTitle(pathname: string): string {
   const title =
@@ -177,18 +177,29 @@ export function generateItemId({
   return prefix + padded;
 }
 
-export function generateProcurementId(lastId: string | null): string {
-  const prefix = "PR-";
+export function generateProcurementId(
+  prefix: prefixProcurementType,
+  lastId: string | null,
+  padLength = 4,
+): string {
+  const normalizedPrefix = prefix.endsWith("-") ? prefix : `${prefix}-`;
 
   if (!lastId) {
-    return `${prefix}0001`;
+    return `${normalizedPrefix}${"1".padStart(padLength, "0")}`;
   }
 
-  const numberPart = lastId.replace(prefix, "");
+  const numberPart = lastId.replace(normalizedPrefix, "");
   const currentNumber = Number.parseInt(numberPart, 10);
 
   const nextNumber = currentNumber + 1;
-  const padded = nextNumber.toString().padStart(4, "0");
 
-  return prefix + padded;
+  const nextId = `${normalizedPrefix}${nextNumber
+    .toString()
+    .padStart(padLength, "0")}`;
+
+  return nextId;
+}
+
+export function isProcurementId(id: string) {
+  return /^(PR|PO|GR)-\d{4}$/.test(id);
 }

@@ -119,7 +119,9 @@ export const columnProcurement = ({
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Button asChild size="icon" variant="ghost" className="w-full">
-                <Link href={ROUTES.AUTH.PROCUREMENT.CREATE}>
+                <Link
+                  href={ROUTES.AUTH.PROCUREMENT.UPDATE(dataRows.idProcurement)}
+                >
                   <BadgeCheck className="h-4 w-4" />
                   Verifikasi
                 </Link>

@@ -26,7 +26,7 @@ export const createProcurement = async (values: CreateProcurementValues) => {
     }
 
     const lastId = await getProcerumentId();
-    const newProcurementId = generateProcurementId(lastId);
+    const newProcurementId = generateProcurementId("PR", lastId);
 
     await db.transaction(async (tx) => {
       await tx.insert(procurementTable).values({

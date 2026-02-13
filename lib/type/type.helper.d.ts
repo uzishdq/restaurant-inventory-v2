@@ -6,6 +6,8 @@ export type roleType =
   | "KITCHEN"
   | "MANAGER";
 
+export type prefixProcurementType = "PR" | "PO" | "GR";
+
 export type FormMode = "create" | "edit";
 
 export type RoleGroup = "ADMIN_ONLY" | "KITCHEN_ONLY" | "MANAGEMENT" | "ALL";

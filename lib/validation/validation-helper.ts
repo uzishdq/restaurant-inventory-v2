@@ -3,6 +3,7 @@ import z from "zod";
 const allowedRegex = /^[a-zA-Z0-9.,/ \-']+$/;
 
 const regexIdItem = /^BB-(RW|WP|FG)-\d{3}$/;
+const regexIdProcurement = /^(PR|PO|GR)-\d{4}$/;
 
 export const enumRole = [
   "SUPER_ADMIN",
@@ -41,9 +42,15 @@ export const IdSchema = z.object({
 
 export const IdItemSchema = z
   .string()
-  .min(1, "ID Item wajib diisi")
+  .min(1, "Pilih bahan baku")
   .max(20, "ID Item maksimal 20 karakter")
   .regex(regexIdItem, "Format: BB-RW-001, BB-WP-001, atau BB-FG-001");
+
+export const IdProcurementSchema = z
+  .string()
+  .min(1, "Procurement ID wajib diisi")
+  .max(20, "ID Procurement maksimal 20 karakter")
+  .regex(regexIdProcurement, "Format: PR-0001, PO-0001, atauGR-0001");
 
 export const validatedStringSchema = (min = 5, max = 50) =>
   z
