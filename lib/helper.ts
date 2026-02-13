@@ -52,6 +52,10 @@ export function getFilteredNav(role?: roleType) {
           title: "Pengajuan Pembelian",
           url: ROUTES.AUTH.PROCUREMENT.INDEX,
         },
+        {
+          title: "Pembelian Bahan Baku",
+          url: ROUTES.AUTH.PURCHASE.INDEX,
+        },
       ],
     },
     {
@@ -198,6 +202,34 @@ export function generateProcurementId(
     .padStart(padLength, "0")}`;
 
   return nextId;
+}
+
+export function generateSequentialIds(
+  prefix: prefixProcurementType,
+  lastId: string | null,
+  count: number,
+  padLength = 4,
+): string[] {
+  const normalizedPrefix = prefix.endsWith("-") ? prefix : `${prefix}-`;
+
+  let startNumber = 1;
+
+  if (lastId) {
+    const numberPart = lastId.replace(normalizedPrefix, "");
+    startNumber = Number.parseInt(numberPart, 10) + 1;
+  }
+
+  const ids: string[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const nextNumber = startNumber + i;
+    const nextId = `${normalizedPrefix}${nextNumber
+      .toString()
+      .padStart(padLength, "0")}`;
+    ids.push(nextId);
+  }
+
+  return ids;
 }
 
 export function isProcurementId(id: string) {

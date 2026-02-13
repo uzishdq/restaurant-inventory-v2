@@ -38,6 +38,10 @@ export const ROUTES = {
       CREATE: "/procurement/create",
       UPDATE: (id: string) => `/procurement/update/${id}`,
     },
+    PURCHASE: {
+      INDEX: "/purchase",
+      UPDATE: (id: string) => `/purchase/update/${id}`,
+    },
     REPORT: {
       TRANSACTION: "/report/transaction",
       FIND_LAPORAN_TRANSACTION: (query: string) =>
@@ -255,6 +259,11 @@ export const CACHE_TAGS = {
       kode: "last-code-procurement",
       list: "get-procurement",
       detail: "get-detail-procurement",
+    },
+    purchase: {
+      kode: "last-code-purchase",
+      list: "get-purchase",
+      detail: "get-detail-purchase",
     },
   },
 } as const;

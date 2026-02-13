@@ -22,3 +22,13 @@ export function invalidateUser() {
   revalidateTag(CACHE_TAGS.master.user.list, { expire: 0 });
   revalidateTag(CACHE_TAGS.master.user.detail, { expire: 0 });
 }
+
+export function invalidateProcurement() {
+  revalidateTag(CACHE_TAGS.transaction.procurement.list, { expire: 0 });
+  revalidateTag(CACHE_TAGS.transaction.procurement.detail, { expire: 0 });
+}
+
+export function invalidatePurchase() {
+  revalidateTag(CACHE_TAGS.transaction.purchase.list, { expire: 0 });
+  revalidateTag(CACHE_TAGS.transaction.purchase.detail, { expire: 0 });
+}

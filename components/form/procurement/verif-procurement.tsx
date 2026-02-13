@@ -44,6 +44,7 @@ import {
 import { CustomSelect } from "../custom-select";
 import { DialogAssignItems } from "./dialog-assign-procurement";
 import { formatDateWIB } from "@/lib/helper";
+import { verifProcurement } from "@/lib/server/action-server/procurement";
 
 interface ProcurementApprovalFormProps {
   procurement: TProcerement;
@@ -462,45 +463,22 @@ export default function ProcurementApprovalForm({
     };
   }, [procurement.procurementItem.length, watchedAssignments]);
 
-  const handleSubmit = useCallback(
-    (values: VerifyProcurementValues) => {
-      const flatAssignments = values.assignments.flatMap((assignment) =>
-        assignment.items.map((item) => ({
-          procurementItemId: item.procurementItemId,
-          supplierId: assignment.supplierId,
-          qtyOrdered: item.qtyOrdered,
-        })),
-      );
-
-      startTransition(async () => {
-        console.log("📦 Procurement Approval Submitted:", {
-          procurementId: values.procurementId,
-          totalAssignments: flatAssignments.length,
-          assignments: flatAssignments,
-        });
-
-        // TODO: Uncomment when API is ready
-        // const result = await approveProcurement({
-        //   procurementId: values.procurementId,
-        //   assignments: flatAssignments,
-        // });
-
-        // if (result.ok) {
-        //   toast.success(result.message);
-        //   onSuccess?.();
-        //   form.reset();
-        // } else {
-        //   toast.error(result.message);
-        // }
-      });
-    },
-    [form],
-  );
+  const onSubmit = async (values: VerifyProcurementValues) => {
+    startTransition(async () => {
+      const result = await verifProcurement(values);
+      if (result.ok) {
+        toast.success(result.message);
+        form.reset();
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
 
   return (
     <FormProvider {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={form.handleSubmit(onSubmit)}
         className={cn("space-y-6", className)}
       >
         {/* Header */}

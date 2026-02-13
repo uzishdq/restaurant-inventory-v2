@@ -8,7 +8,8 @@ type Category =
   | "statusTransaction"
   | "stockStatus"
   | "typeItem"
-  | "statusProcurement";
+  | "statusProcurement"
+  | "purchaseStatus";
 
 interface BadgeCustomProps {
   value: string;
@@ -48,7 +49,26 @@ const badgeStyles: Record<Category, Record<string, StyleConfig>> = {
     COMPLETED: { className: "bg-green-100 text-green-800" },
     CANCELLED: { className: "bg-red-100 text-red-800" },
   },
-
+  purchaseStatus: {
+    DRAFT: {
+      className: "bg-gray-100 text-gray-800",
+    },
+    SENT: {
+      className: "bg-blue-100 text-blue-800",
+    },
+    APPROVED: {
+      className: "bg-green-100 text-green-800",
+    },
+    REJECTED: {
+      className: "bg-red-100 text-red-800",
+    },
+    DELIVERED: {
+      className: "bg-purple-100 text-purple-800",
+    },
+    COMPLETED: {
+      className: "bg-emerald-100 text-emerald-800",
+    },
+  },
   statusProcurement: {
     DRAFT: { className: "bg-gray-100 text-gray-800" },
     ON_PROGRESS: { className: "bg-yellow-100 text-yellow-800" },
