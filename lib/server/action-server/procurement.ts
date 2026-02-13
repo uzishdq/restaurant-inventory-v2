@@ -3,6 +3,8 @@
 import { db } from "@/lib/db";
 import {
   createProcurementSchema,
+  verifyProcurementSchema,
+  VerifyProcurementValues,
   type CreateProcurementValues,
 } from "@/lib/validation/procurement-validation";
 import { LABEL } from "@/lib/constant";
@@ -19,7 +21,7 @@ export const createProcurement = async (values: CreateProcurementValues) => {
       return { ok: false, message: LABEL.ERROR.INVALID_FIELD };
     }
 
-    const authResult = await requireRole("KITCHEN_ONLY");
+    const authResult = await requireRole("ADMIN_KITCHEN");
 
     if (!authResult.ok || !authResult.session) {
       return { ok: false, message: authResult.message };
@@ -50,6 +52,33 @@ export const createProcurement = async (values: CreateProcurementValues) => {
     };
   } catch (error) {
     console.error("Error create procurement:", error);
+    return {
+      ok: false,
+      message: LABEL.ERROR.SERVER,
+    };
+  }
+};
+
+export const verifProcurement = async (values: VerifyProcurementValues) => {
+  try {
+    const validated = verifyProcurementSchema.safeParse(values);
+
+    if (!validated.success) {
+      return { ok: false, message: LABEL.ERROR.INVALID_FIELD };
+    }
+
+    const authResult = await requireRole("ADMIN_KITCHEN");
+
+    if (!authResult.ok || !authResult.session) {
+      return { ok: false, message: authResult.message };
+    }
+
+    return {
+      ok: true,
+      message: LABEL.INPUT.SUCCESS.SAVED,
+    };
+  } catch (error) {
+    console.error("Error verif procurement:", error);
     return {
       ok: false,
       message: LABEL.ERROR.SERVER,

@@ -262,6 +262,7 @@ export const CACHE_TAGS = {
 export const ROLE_GROUP: Record<RoleGroup, readonly roleType[]> = {
   ADMIN_ONLY: ["SUPER_ADMIN", "ADMIN"],
   KITCHEN_ONLY: ["HEADKITCHEN", "KITCHEN"],
+  ADMIN_KITCHEN: ["SUPER_ADMIN", "ADMIN", "HEADKITCHEN", "KITCHEN"],
   MANAGEMENT: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
   ALL: ["SUPER_ADMIN", "ADMIN", "HEADKITCHEN", "KITCHEN", "MANAGER"],
 } as const;

@@ -10,7 +10,12 @@ export type prefixProcurementType = "PR" | "PO" | "GR";
 
 export type FormMode = "create" | "edit";
 
-export type RoleGroup = "ADMIN_ONLY" | "KITCHEN_ONLY" | "MANAGEMENT" | "ALL";
+export type RoleGroup =
+  | "ADMIN_ONLY"
+  | "KITCHEN_ONLY"
+  | "ADMIN_KITCHEN"
+  | "MANAGEMENT"
+  | "ALL";
 
 export type typeItems = "RAW_MATERIAL" | "WORK_IN_PROGRESS" | "FINISHED_GOOD";
 

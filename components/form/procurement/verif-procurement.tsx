@@ -46,7 +46,6 @@ import { DialogAssignItems } from "./dialog-assign-procurement";
 import { formatDateWIB } from "@/lib/helper";
 
 interface ProcurementApprovalFormProps {
-  procurementId: string;
   procurement: TProcerement;
   suppliers: TSupplier[];
   className?: string;
@@ -407,7 +406,6 @@ SupplierGroupCard.displayName = "SupplierGroupCard";
 // MAIN FORM COMPONENT
 // ============================================================================
 export default function ProcurementApprovalForm({
-  procurementId,
   procurement,
   suppliers = [],
   className,
@@ -417,7 +415,7 @@ export default function ProcurementApprovalForm({
   const form = useForm<VerifyProcurementValues>({
     resolver: zodResolver(verifyProcurementSchema),
     defaultValues: {
-      procurementId,
+      procurementId: procurement.idProcurement,
       assignments: [],
     },
     mode: "onChange",

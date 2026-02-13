@@ -32,7 +32,6 @@ export default async function UpdateProcurementPage({
       <Card className="w-full">
         <CardContent>
           <ProcurementApprovalForm
-            procurementId={id}
             procurement={procurement.data}
             suppliers={suppliers.data}
           />
