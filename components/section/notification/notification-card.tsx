@@ -114,7 +114,7 @@ export default function NotificationCard({
   const recipient = getRecipientInfo();
 
   return (
-    <Card className="group relative overflow-hidden rounded-xl border transition-all hover:shadow-md hover:border-primary/50">
+    <Card className="group relative overflow-hidden rounded-xl border transition-all hover:shadow-md">
       {/* Accent border based on status */}
       <div
         className={cn(
@@ -185,7 +185,7 @@ export default function NotificationCard({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              className="text-xs"
               onClick={() =>
                 onViewDetail(notification.refId, notification.refType)
               }

@@ -104,7 +104,7 @@ export default function ProcurementDetail({
 
         <Separator />
 
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
             {/* Requester */}
             <div className="flex items-start gap-3">

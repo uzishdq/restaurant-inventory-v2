@@ -127,7 +127,7 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
     title: "Akun Saya",
   },
   {
-    pattern: /^\/dashboard\/notification$/,
+    pattern: /^\/account\/notification$/,
     title: "Notifikasi",
   },
 ];

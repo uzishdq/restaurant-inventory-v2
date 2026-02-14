@@ -117,7 +117,7 @@ export default function PurchaseDetail({
 
         <Separator />
 
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Supplier Info */}
             <div className="md:col-span-2 flex items-start gap-3">
@@ -131,17 +131,6 @@ export default function PurchaseDetail({
                 <p className="text-sm font-semibold mt-1 truncate">
                   {data.supplierStore}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {data.supplierName}
-                </p>
-                {data.supplierPhone && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <Phone className="h-3 w-3 text-muted-foreground" />
-                    <p className="text-xs text-muted-foreground">
-                      {data.supplierPhone}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
 
