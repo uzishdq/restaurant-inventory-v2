@@ -22,8 +22,8 @@ export default function PurchaseTableClient({
       description={description}
       searchBy="supplierStore"
       labelSearch="Nama Toko"
-      isFilterDate={false}
-      filterDate=""
+      isFilterDate={true}
+      filterDate="createdAt"
       data={data}
       columns={columnPurchase}
       renderExpandedRow={(item) => (

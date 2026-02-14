@@ -36,35 +36,35 @@ export default async function PurchasePage() {
     <section className=" space-y-4">
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         <SectionCard
-          title="Pengadaan Diproses / Dipesan"
+          title="Pembelian Diproses / Dipesan"
           value={sentPurchase.length}
           Icon={ShoppingCart}
         />
         <SectionCard
-          title="Pengadaan Diterima"
+          title="Pembelian Diterima"
           value={receivedPurchase.length}
           Icon={PackageCheck}
         />
         <SectionCard
-          title="Pengadaan Selesai"
+          title="Pembelian Selesai"
           value={completedPurchase.length}
           Icon={CheckCircle}
         />
       </div>
       <PurchaseTableClient
-        header="Pembelian Bahan Baku (Sent)"
+        header="Pembelian Bahan Baku Diproses / Dipesan"
         description="Pembelian bahan baku yang sudah dipesan ke supplier dan menunggu pengiriman"
         data={sentPurchase}
       />
 
       <PurchaseTableClient
-        header="Pembelian Bahan Baku (Receive)"
+        header="Pembelian Bahan Baku Diterima"
         description="Pembelian bahan baku yang telah diterima dan sedang dalam proses pengecekan"
         data={receivedPurchase}
       />
 
       <PurchaseTableClient
-        header="Pembelian Bahan Baku (Completed)"
+        header="Pembelian Bahan Baku Selesai"
         description="Riwayat pembelian bahan baku yang telah selesai dan stok sudah diperbarui"
         data={completedPurchase}
       />

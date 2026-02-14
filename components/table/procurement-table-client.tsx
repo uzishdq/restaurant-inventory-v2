@@ -26,8 +26,8 @@ export default function ProcurementTableClient({
       description="Pengajuan pengadaan bahan baku yang belum diproses atau menunggu persetujuan"
       searchBy="requestedBy"
       labelSearch="Nama"
-      isFilterDate={false}
-      filterDate=""
+      isFilterDate={true}
+      filterDate="createdAt"
       data={data}
       columns={columns}
       renderExpandedRow={(item) => (

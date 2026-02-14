@@ -1,4 +1,5 @@
 import { TDetailItem } from "@/lib/type/type.item";
+import { Badge } from "../ui/badge";
 
 interface ExpendedRowItemProps {
   detailItem: TDetailItem[];
@@ -16,12 +17,20 @@ export default function ExpendedRowItem({
         {detailItem.map((detail, index) => (
           <div
             key={`${detail.idBom}-${detail.rawItemId}-${index}`}
-            className="flex justify-between items-center p-3 rounded-sm border bg-card"
+            className="rounded-md border bg-card p-3"
           >
-            <span className="font-medium">{detail.name}</span>
-            <span className="text-sm text-muted-foreground">
-              {detail.qty} {detail.unitName}
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="font-medium">{detail.name}</span>
+              <Badge variant="outline" className="ml-2">
+                {detail.qty} {detail.unitName}
+              </Badge>
+            </div>
+
+            {detail.categoryName && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {detail.categoryName}
+              </p>
+            )}
           </div>
         ))}
       </div>

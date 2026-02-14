@@ -1,4 +1,5 @@
 import { TProcerementItem } from "@/lib/type/type.procurement";
+import { Badge } from "../ui/badge";
 
 interface ExpandedRowProcurementProps {
   detailItem: TProcerementItem[];
@@ -21,9 +22,9 @@ export default function ExpandedRowProcurement({
           >
             <div className="flex items-center justify-between">
               <span className="font-medium">{item.itemName}</span>
-              <span className="text-sm text-muted-foreground">
+              <Badge variant="outline" className="ml-2">
                 {item.qtyRequested} {item.unitName}
-              </span>
+              </Badge>
             </div>
 
             {item.categoryName && (
