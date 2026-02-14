@@ -67,26 +67,22 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
   { pattern: /^\/master\/categories$/, title: "Kategori" },
 
   // Procurement
-  { pattern: /^\/procurement\/create$/, title: "Pengadaan Bahan Baku" },
+  {
+    pattern: /^\/procurement\/create$/,
+    title: "Pengajuan Pengadaan Bahan Baku",
+  },
   {
     pattern: /^\/procurement\/update\/[^/]+$/,
     title: "Verifikasi Pengadaan Bahan Baku",
   },
   { pattern: /^\/procurement$/, title: "Pengadaan Bahan Baku" },
 
+  // Procurement
+  { pattern: /^\/purchase$/, title: "Pembelian Bahan Baku" },
+
   // Transaction
   { pattern: /^\/dashboard\/create-transaction$/, title: "Buat Transaksi" },
   { pattern: /^\/dashboard\/item-movement$/, title: "Pergerakan Bahan Baku" },
-
-  // Stock In
-  {
-    pattern: /^\/dashboard\/incoming-item$/,
-    title: "Pengadaan Bahan Baku",
-  },
-  {
-    pattern: /^\/dashboard\/incoming-item\/detail\/.+$/,
-    title: "Detail Pengadaan Bahan Baku",
-  },
 
   // Stock Out
   {
@@ -264,6 +260,11 @@ export const CACHE_TAGS = {
       kode: "last-code-purchase",
       list: "get-purchase",
       detail: "get-detail-purchase",
+    },
+    notification: {
+      kode: "last-code-notification",
+      list: "get-notification",
+      detail: "get-detail-notification",
     },
   },
 } as const;

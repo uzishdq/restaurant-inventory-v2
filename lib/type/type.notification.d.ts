@@ -50,3 +50,21 @@ export type TUserReceiptNotif = {
   totalItems: number;
   receivedDate: string;
 };
+
+// lib/type/type.notification.ts
+export type TNotification = {
+  idNotification: string;
+  recipientType: "USER" | "SUPPLIER";
+  userId: string | null;
+  supplierId: string | null;
+  refType: "PROCUREMENT" | "PURCHASE" | "RECEIPT" | "RETURN";
+  refId: string;
+  message: string;
+  status: "PENDING" | "ONPROGRESS" | "SENT" | "FAILED";
+  createdAt: Date;
+
+  // Joined fields
+  userName?: string | null;
+  supplierName?: string | null;
+  supplierStore?: string | null;
+};

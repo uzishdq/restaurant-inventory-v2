@@ -52,20 +52,20 @@ export default async function PurchasePage() {
         />
       </div>
       <PurchaseTableClient
-        header="Pengadaan Bahan Baku (Sent)"
-        description="Pengadaan bahan baku yang sudah dipesan ke supplier dan menunggu pengiriman"
+        header="Pembelian Bahan Baku (Sent)"
+        description="Pembelian bahan baku yang sudah dipesan ke supplier dan menunggu pengiriman"
         data={sentPurchase}
       />
 
       <PurchaseTableClient
-        header="Pengadaan Bahan Baku (Receive)"
-        description="Pengadaan bahan baku yang telah diterima dan sedang dalam proses pengecekan"
+        header="Pembelian Bahan Baku (Receive)"
+        description="Pembelian bahan baku yang telah diterima dan sedang dalam proses pengecekan"
         data={receivedPurchase}
       />
 
       <PurchaseTableClient
-        header="Pengadaan Bahan Baku (Completed)"
-        description="Riwayat pengadaan bahan baku yang telah selesai dan stok sudah diperbarui"
+        header="Pembelian Bahan Baku (Completed)"
+        description="Riwayat pembelian bahan baku yang telah selesai dan stok sudah diperbarui"
         data={completedPurchase}
       />
     </section>

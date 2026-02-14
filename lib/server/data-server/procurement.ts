@@ -10,10 +10,11 @@ import {
   unitTable,
   userTable,
 } from "@/lib/db/schema";
-import { isProcurementId } from "@/lib/helper";
 import { TProcerement } from "@/lib/type/type.procurement";
-import { desc, eq } from "drizzle-orm";
+import { procurementByIdSchema } from "@/lib/validation/procurement-validation";
+import { and, desc, eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
+import z from "zod";
 
 export const getProcerumentId = async () => {
   const [result] = await db
@@ -105,10 +106,12 @@ export const getProcerumentList = unstable_cache(
 );
 
 export const getProcerumentById = unstable_cache(
-  async (id: string) => {
+  async (values: z.infer<typeof procurementByIdSchema>) => {
     try {
-      if (!isProcurementId(id)) {
-        return { ok: false, data: null };
+      const parsed = procurementByIdSchema.safeParse(values);
+
+      if (!parsed.success) {
+        return { ok: true, data: null };
       }
 
       const rows = await db
@@ -140,7 +143,12 @@ export const getProcerumentById = unstable_cache(
           categoryTable,
           eq(itemTable.categoryId, categoryTable.idCategory),
         )
-        .where(eq(procurementTable.idProcurement, id));
+        .where(
+          and(
+            eq(procurementTable.idProcurement, parsed.data.id),
+            eq(procurementTable.status, parsed.data.status),
+          ),
+        );
 
       const grouped = rows.reduce<Record<string, TProcerement>>((acc, row) => {
         if (!acc[row.idProcurement]) {
@@ -168,13 +176,12 @@ export const getProcerumentById = unstable_cache(
         return acc;
       }, {});
 
-      const result = Object.values(grouped)[0] ?? null;
+      const result = Object.values(grouped)[0];
 
-      if (result) {
-        return { ok: true, data: result };
-      } else {
-        return { ok: true, data: null };
-      }
+      return {
+        ok: true,
+        data: result ?? null,
+      };
     } catch (error) {
       console.error("error get procurement data by id: ", error);
       return { ok: false, data: null };

@@ -5,7 +5,7 @@ export default function Loading() {
     <div className="flex justify-center items-center h-full">
       <div className="flex flex-col items-center space-y-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-xl text-muted-foreground">
+        <p className="text-lg text-muted-foreground">
           Sedang memuat halaman, harap tunggu...
         </p>
       </div>

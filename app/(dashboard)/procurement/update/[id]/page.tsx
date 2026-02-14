@@ -19,12 +19,16 @@ export default async function UpdateProcurementPage({
   }
 
   const [procurement, suppliers] = await Promise.all([
-    getProcerumentById(id),
+    getProcerumentById({ id: id, status: "DRAFT" }),
     getSupplierList(),
   ]);
 
-  if (!procurement.ok || !procurement.data || !suppliers.data) {
+  if (!procurement.ok) {
     return RenderError(LABEL.ERROR.DESCRIPTION);
+  }
+
+  if (!procurement.data || !suppliers.data) {
+    return RenderError(LABEL.ERROR.DATA_NOT_FOUND);
   }
 
   return (

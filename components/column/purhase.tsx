@@ -45,7 +45,7 @@ export const columnPurchase: ColumnDef<TPurchase>[] = [
   },
   {
     accessorKey: "idPurchase",
-    header: "No. Purchase Order",
+    header: "No. Pembelian",
     enableHiding: false,
     cell: ({ row }) => (
       <div className="font-medium">{row.getValue("idPurchase")}</div>

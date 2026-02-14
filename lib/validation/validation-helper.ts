@@ -19,6 +19,13 @@ export const enumTypeItem = [
   "FINISHED_GOOD",
 ] as const;
 
+export const enumStatusProcurement = [
+  "DRAFT",
+  "ON_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+
 export const username = z
   .string()
   .min(5, "Harus memiliki minimal 5 karakter.")
