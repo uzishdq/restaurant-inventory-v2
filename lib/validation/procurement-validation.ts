@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   enumStatusProcurement,
+  enumStatusPurchase,
   IdItemSchema,
   IdProcurementSchema,
   optionalStringSchema,
@@ -47,7 +48,16 @@ export type VerifyProcurementValues = z.infer<typeof verifyProcurementSchema>;
 
 export const procurementByIdSchema = z.object({
   id: IdProcurementSchema,
-  status: z.enum(enumStatusProcurement, {
+  status: z.enum([...enumStatusProcurement, "ALL"], {
     error: "Status Pengadaan Tidak sesuai",
+  }),
+});
+
+// Purchase Schema
+
+export const purchaseByIdSchema = z.object({
+  id: IdProcurementSchema,
+  status: z.enum([...enumStatusPurchase, "ALL"], {
+    error: "Status Pembelian Tidak sesuai",
   }),
 });

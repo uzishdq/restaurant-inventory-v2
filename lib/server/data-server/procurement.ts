@@ -114,6 +114,14 @@ export const getProcerumentById = unstable_cache(
         return { ok: true, data: null };
       }
 
+      const whereConditions = [
+        eq(procurementTable.idProcurement, parsed.data.id),
+      ];
+
+      if (parsed.data.status !== "ALL") {
+        whereConditions.push(eq(procurementTable.status, parsed.data.status));
+      }
+
       const rows = await db
         .select({
           idProcurement: procurementTable.idProcurement,
@@ -143,12 +151,7 @@ export const getProcerumentById = unstable_cache(
           categoryTable,
           eq(itemTable.categoryId, categoryTable.idCategory),
         )
-        .where(
-          and(
-            eq(procurementTable.idProcurement, parsed.data.id),
-            eq(procurementTable.status, parsed.data.status),
-          ),
-        );
+        .where(and(...whereConditions));
 
       const grouped = rows.reduce<Record<string, TProcerement>>((acc, row) => {
         if (!acc[row.idProcurement]) {

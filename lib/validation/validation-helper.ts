@@ -26,6 +26,14 @@ export const enumStatusProcurement = [
   "CANCELLED",
 ] as const;
 
+export const enumStatusPurchase = [
+  "DRAFT",
+  "SENT",
+  "RECEIVED",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+
 export const username = z
   .string()
   .min(5, "Harus memiliki minimal 5 karakter.")

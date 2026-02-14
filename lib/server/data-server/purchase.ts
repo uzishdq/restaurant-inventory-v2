@@ -11,8 +11,10 @@ import {
   unitTable,
 } from "@/lib/db/schema";
 import { TPurchase, TPurchaseItem } from "@/lib/type/type.procurement";
-import { desc, eq } from "drizzle-orm";
+import { purchaseByIdSchema } from "@/lib/validation/procurement-validation";
+import { and, desc, eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
+import z from "zod";
 
 export const getPurchaseId = async () => {
   const [result] = await db
@@ -126,6 +128,121 @@ export const getPurchaseList = unstable_cache(
   ["get-purchase-list"],
   {
     tags: [CACHE_TAGS.transaction.purchase.list],
+    revalidate: 3600,
+  },
+);
+
+export const getPurchaseById = unstable_cache(
+  async (values: z.infer<typeof purchaseByIdSchema>) => {
+    try {
+      const parsed = purchaseByIdSchema.safeParse(values);
+
+      if (!parsed.success) {
+        return { ok: true, data: null };
+      }
+
+      const whereConditions = [eq(purchaseTable.idPurchase, parsed.data.id)];
+
+      if (parsed.data.status !== "ALL") {
+        whereConditions.push(eq(purchaseTable.status, parsed.data.status));
+      }
+
+      const rows = await db
+        .select({
+          // Purchase fields
+          idPurchase: purchaseTable.idPurchase,
+          procurementId: purchaseTable.procurementId,
+          supplierId: purchaseTable.supplierId,
+          status: purchaseTable.status,
+          createdAt: purchaseTable.createdAt,
+
+          // Supplier fields
+          supplierName: supplierTable.name,
+          supplierStore: supplierTable.store,
+          supplierPhone: supplierTable.phone,
+
+          // Purchase item fields
+          idPurchaseItem: purchaseItemTable.idPurchaseItem,
+          itemId: purchaseItemTable.itemId,
+          procurementItemId: purchaseItemTable.procurementItemId,
+          itemName: itemTable.name,
+          categoryName: categoryTable.name,
+          unitName: unitTable.name,
+          qtyOrdered: purchaseItemTable.qtyOrdered,
+        })
+        .from(purchaseTable)
+        .leftJoin(
+          supplierTable,
+          eq(purchaseTable.supplierId, supplierTable.idSupplier),
+        )
+        .leftJoin(
+          purchaseItemTable,
+          eq(purchaseTable.idPurchase, purchaseItemTable.purchaseId),
+        )
+        .leftJoin(itemTable, eq(purchaseItemTable.itemId, itemTable.idItem))
+        .leftJoin(unitTable, eq(itemTable.unitId, unitTable.idUnit))
+        .leftJoin(
+          categoryTable,
+          eq(itemTable.categoryId, categoryTable.idCategory),
+        )
+        .where(and(...whereConditions));
+
+      // Group by purchase ID
+      const grouped = rows.reduce<Record<string, TPurchase>>((acc, row) => {
+        const purchaseId = row.idPurchase;
+
+        // Initialize purchase if not exists
+        if (!acc[purchaseId]) {
+          acc[purchaseId] = {
+            idPurchase: row.idPurchase,
+            procurementId: row.procurementId,
+            supplierId: row.supplierId,
+            supplierName: row.supplierName ?? "",
+            supplierStore: row.supplierStore ?? "",
+            supplierPhone: row.supplierPhone,
+            status: row.status,
+            createdAt: row.createdAt,
+            totalItems: 0,
+            totalQty: 0,
+            purchaseItems: [],
+          };
+        }
+
+        // Add purchase item if exists
+        if (row.idPurchaseItem) {
+          const purchaseItem: TPurchaseItem = {
+            idPurchaseItem: row.idPurchaseItem,
+            purchaseId: row.idPurchase,
+            procurementItemId: row.procurementItemId!,
+            itemId: row.itemId!,
+            itemName: row.itemName ?? "",
+            categoryName: row.categoryName ?? "",
+            qtyOrdered: row.qtyOrdered!,
+            unitName: row.unitName ?? "",
+          };
+
+          acc[purchaseId].purchaseItems.push(purchaseItem);
+          acc[purchaseId].totalItems = acc[purchaseId].purchaseItems.length;
+          acc[purchaseId].totalQty += Number(row.qtyOrdered);
+        }
+
+        return acc;
+      }, {});
+
+      const result = Object.values(grouped)[0];
+
+      return {
+        ok: true,
+        data: result ?? null,
+      };
+    } catch (error) {
+      console.error("Error get purchase data by id:", error);
+      return { ok: false, data: null };
+    }
+  },
+  ["get-detail-purchase"],
+  {
+    tags: [CACHE_TAGS.transaction.purchase.detail],
     revalidate: 3600,
   },
 );

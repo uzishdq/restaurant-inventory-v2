@@ -7,6 +7,7 @@ import NotificationCard from "./notification-card";
 import { Input } from "@/components/ui/input";
 import { Bell, Search } from "lucide-react";
 import type { TNotification } from "@/lib/type/type.notification";
+import { ROUTES } from "@/lib/constant";
 
 interface NotificationListProps {
   notifications: TNotification[];
@@ -27,10 +28,10 @@ export default function NotificationList({
   const handleViewDetail = (refId: string, refType: string) => {
     switch (refType) {
       case "PROCUREMENT":
-        router.push(`/procurement/${refId}`);
+        router.push(ROUTES.AUTH.PROCUREMENT.DETAIL(refId));
         break;
       case "PURCHASE":
-        router.push(`/purchase/${refId}`);
+        router.push(ROUTES.AUTH.PURCHASE.DETAIL(refId));
         break;
       case "RECEIPT":
         router.push(`/receipt/${refId}`);
