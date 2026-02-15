@@ -32,8 +32,8 @@ export default async function MovementsPage() {
       </div>
 
       <TableDateWrapper
-        header="Item Movement"
-        description="Riwayat pergerakan stok barang masuk dan keluar"
+        header="Pergerakan Bahan Baku"
+        description="Riwayat pergerakan stok bahan baku masuk dan keluar"
         searchBy="itemName"
         labelSearch="Nama Bahan Baku"
         isFilterDate={true}

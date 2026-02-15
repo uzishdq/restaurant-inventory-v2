@@ -39,3 +39,7 @@ export type typeTransactionType =
   | "PRODUCTION"
   | "SALES"
   | "ADJUSTMENT";
+
+export type statusTransaction = "PENDING" | "COMPLETED" | "CANCELLED";
+
+export type typeMovement = "IN" | "OUT";

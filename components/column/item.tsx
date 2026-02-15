@@ -242,24 +242,21 @@ const movementTypeConfig = {
   },
 };
 
-const transactionTypeConfig = {
-  PURCHASE: { label: "Pembelian", color: "bg-blue-500" },
-  PRODUCTION: { label: "Produksi", color: "bg-purple-500" },
-  SALES: { label: "Penjualan", color: "bg-orange-500" },
-  ADJUSTMENT: { label: "Penyesuaian", color: "bg-gray-500" },
-};
-
-const transactionStatusConfig = {
-  PENDING: { label: "Pending", color: "bg-yellow-500" },
-  COMPLETED: { label: "Selesai", color: "bg-green-500" },
-  CANCELLED: { label: "Batal", color: "bg-red-500" },
-};
-
 export const columnItemMovement: ColumnDef<TItemMovement>[] = [
   {
     accessorKey: "createdAt",
-    header: "Tanggal",
     enableHiding: false,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Tanggal
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
       <div className="font-medium whitespace-nowrap">
         {formatDateWIB(row.getValue("createdAt"))}
@@ -285,13 +282,12 @@ export const columnItemMovement: ColumnDef<TItemMovement>[] = [
       const type = row.original.transactionType;
       if (!type) return <span className="text-muted-foreground">-</span>;
 
-      const config = transactionTypeConfig[type];
-      return <Badge className={config.color}>{config.label}</Badge>;
+      return <BadgeCustom value={type} category="transactionType" />;
     },
   },
   {
     accessorKey: "itemName",
-    header: "Item",
+    header: "Nama Bahan Baku",
     enableHiding: false,
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
@@ -349,8 +345,7 @@ export const columnItemMovement: ColumnDef<TItemMovement>[] = [
       const status = row.original.transactionStatus;
       if (!status) return <span className="text-muted-foreground">-</span>;
 
-      const config = transactionStatusConfig[status];
-      return <Badge className={config.color}>{config.label}</Badge>;
+      return <BadgeCustom value={status} category="transactionStatus" />;
     },
   },
   {
