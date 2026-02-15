@@ -56,6 +56,10 @@ export function getFilteredNav(role?: roleType) {
           title: "Pembelian Bahan Baku",
           url: ROUTES.AUTH.PURCHASE.INDEX,
         },
+        {
+          title: "Penerimaan Bahan Baku ",
+          url: ROUTES.AUTH.RECEIPT.INDEX,
+        },
       ],
     },
     {

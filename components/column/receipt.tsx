@@ -5,13 +5,14 @@ import {
   ArrowUpDown,
   ChevronDown,
   ChevronRight,
-  FileText,
-  MoreHorizontal,
-  Package,
-  SearchCheck,
+  User,
   Store,
+  MoreHorizontal,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDateWIB } from "@/lib/helper";
+import { TReceipt } from "@/lib/type/type.procurement";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,20 +20,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { formatDateWIB } from "@/lib/helper";
-import { TPurchase } from "@/lib/type/type.procurement";
-import { BadgeCustom } from "./badge-custom";
+} from "../ui/dropdown-menu";
 import Link from "next/link";
 import { ROUTES } from "@/lib/constant";
 
-export const columnPurchase: ColumnDef<TPurchase>[] = [
+export const columnReceipt: ColumnDef<TReceipt>[] = [
   {
     id: "expander",
     enableHiding: false,
     header: () => null,
     cell: ({ row }) => {
-      if (row.original.purchaseItems.length === 0) {
+      if (row.original.receiptItems.length === 0) {
         return null;
       }
 
@@ -48,20 +46,19 @@ export const columnPurchase: ColumnDef<TPurchase>[] = [
     },
   },
   {
-    accessorKey: "idPurchase",
-    header: "No. Pembelian",
+    accessorKey: "idReceipt",
+    header: "No. Penerimaan",
     enableHiding: false,
     cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("idPurchase")}</div>
+      <div className="font-medium">{row.getValue("idReceipt")}</div>
     ),
   },
   {
-    accessorKey: "procurementId",
-    header: "No. Pengadaan",
-    enableHiding: false,
+    accessorKey: "purchaseId",
+    header: "No. PO",
     cell: ({ row }) => (
       <div className="text-sm text-muted-foreground">
-        {row.getValue("procurementId")}
+        {row.getValue("purchaseId")}
       </div>
     ),
   },
@@ -78,37 +75,61 @@ export const columnPurchase: ColumnDef<TPurchase>[] = [
         </Button>
       );
     },
-    enableHiding: false,
     cell: ({ row }) => {
       const store = row.original.supplierStore;
       const name = row.original.supplierName;
-      const phone = row.original.supplierPhone;
 
       return (
         <div className="flex items-start gap-2">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-            <Store className="h-4 w-4 text-primary" />
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-purple-50">
+            <Store className="h-4 w-4 text-purple-600" />
           </div>
           <div className="min-w-0">
             <p className="font-medium text-sm">{store}</p>
             <p className="text-xs text-muted-foreground truncate">{name}</p>
-            {phone && <p className="text-xs text-muted-foreground">{phone}</p>}
           </div>
         </div>
       );
     },
   },
   {
-    id: "itemsSummary",
-    header: "Total Pesanan",
+    accessorKey: "receivedByName",
+    header: "Diterima Oleh",
     cell: ({ row }) => {
-      const totalItems = row.original.totalItems;
+      const name = row.original.receivedByName;
 
       return (
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <div className="rounded-full bg-blue-50 p-1.5">
+            <User className="h-3.5 w-3.5 text-blue-600" />
+          </div>
+          <span className="text-sm">{name}</span>
+        </div>
+      );
+    },
+  },
+  {
+    id: "summary",
+    header: "Ringkasan",
+    cell: ({ row }) => {
+      const totalItems = row.original.totalItems;
+      const totalReceived = row.original.totalReceived;
+      const totalDamaged = row.original.totalDamaged;
+
+      return (
+        <div className="flex items-center gap-3">
           <div className="text-sm">
-            <p className="font-medium">{totalItems} bahan baku</p>
+            <p className="font-medium">{totalItems} item</p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="text-green-600">
+                ✓ {totalReceived.toFixed(2)}
+              </span>
+              {totalDamaged > 0 && (
+                <span className="text-red-600">
+                  ✗ {totalDamaged.toFixed(2)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -116,14 +137,13 @@ export const columnPurchase: ColumnDef<TPurchase>[] = [
   },
   {
     accessorKey: "createdAt",
-    enableHiding: false,
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Tanggal Dibuat
+          Tanggal
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -138,20 +158,11 @@ export const columnPurchase: ColumnDef<TPurchase>[] = [
     },
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    enableHiding: false,
-    cell: ({ row }) => (
-      <BadgeCustom value={row.getValue("status")} category="purchaseStatus" />
-    ),
-  },
-  {
     id: "actions",
     header: "Opsi",
     enableHiding: false,
     cell: ({ row }) => {
       const dataRows = row.original;
-      const status = dataRows.status;
 
       return (
         <DropdownMenu>
@@ -164,26 +175,14 @@ export const columnPurchase: ColumnDef<TPurchase>[] = [
           <DropdownMenuContent align="end" className="space-y-1">
             <DropdownMenuLabel className="text-center">Opsi</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {status === "SENT" && (
-              <DropdownMenuItem asChild>
-                <Button asChild size="icon" variant="ghost" className="w-full">
-                  <Link href={ROUTES.AUTH.PURCHASE.UPDATE(dataRows.idPurchase)}>
-                    <SearchCheck className="h-4 w-4" />
-                    QC Bahan Baku
-                  </Link>
-                </Button>
-              </DropdownMenuItem>
-            )}
-            {status === "COMPLETED" && (
-              <DropdownMenuItem asChild>
-                <Button asChild size="icon" variant="ghost" className="w-full">
-                  <Link href={ROUTES.AUTH.PURCHASE.DETAIL(dataRows.idPurchase)}>
-                    <FileText className="h-4 w-4" />
-                    Detail
-                  </Link>
-                </Button>
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem asChild>
+              <Button asChild size="icon" variant="ghost" className="w-full">
+                <Link href={ROUTES.AUTH.RECEIPT.DETAIL(dataRows.idReceipt)}>
+                  <FileText className="h-4 w-4" />
+                  Detail
+                </Link>
+              </Button>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

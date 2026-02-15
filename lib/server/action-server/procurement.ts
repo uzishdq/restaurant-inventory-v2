@@ -5,13 +5,18 @@ import {
   createProcurementSchema,
   verifyProcurementSchema,
   VerifyProcurementValues,
+  verifyPurchaseSchema,
+  VerifyPurchaseValues,
   type CreateProcurementValues,
 } from "@/lib/validation/procurement-validation";
-import { LABEL, ROUTES } from "@/lib/constant";
+import { LABEL } from "@/lib/constant";
 import { requireRole } from "./req-role";
 import { getProcerumentId } from "../data-server/procurement";
 import { generateProcurementId, generateSequentialIds } from "@/lib/helper";
 import {
+  goodsReceiptItemTable,
+  goodsReceiptTable,
+  itemMovementTable,
   itemTable,
   notificationsTable,
   procurementItemTable,
@@ -19,19 +24,22 @@ import {
   purchaseItemTable,
   purchaseTable,
   supplierTable,
+  transactionTable,
   unitTable,
 } from "@/lib/db/schema";
 import { getPurchaseId } from "../data-server/purchase";
+import { getReceiptId } from "../data-server/receipt";
 import { eq } from "drizzle-orm";
 import {
   templateProcurementApproved,
   templatePurchaseRequest,
 } from "@/lib/template-notif";
-import { revalidatePath } from "next/cache";
 import {
+  invalidateItem,
   invalidateProcurement,
   invalidatePurchase,
 } from "../data-server/revalidate";
+import { generateTransactionID } from "../data-server/transaction";
 
 export const createProcurement = async (values: CreateProcurementValues) => {
   try {
@@ -67,7 +75,6 @@ export const createProcurement = async (values: CreateProcurementValues) => {
     });
 
     invalidateProcurement();
-    revalidatePath(ROUTES.AUTH.PROCUREMENT.INDEX);
 
     return {
       ok: true,
@@ -225,7 +232,6 @@ export const verifProcurement = async (values: VerifyProcurementValues) => {
 
     invalidateProcurement();
     invalidatePurchase();
-    revalidatePath(ROUTES.AUTH.PROCUREMENT.INDEX);
 
     return {
       ok: true,
@@ -233,6 +239,114 @@ export const verifProcurement = async (values: VerifyProcurementValues) => {
     };
   } catch (error) {
     console.error("Error verif procurement:", error);
+    return {
+      ok: false,
+      message: LABEL.ERROR.SERVER,
+    };
+  }
+};
+
+export const verifPurchase = async (values: VerifyPurchaseValues) => {
+  try {
+    const validated = verifyPurchaseSchema.safeParse(values);
+
+    if (!validated.success) {
+      return { ok: false, message: LABEL.ERROR.INVALID_FIELD };
+    }
+
+    const authResult = await requireRole("ADMIN_KITCHEN");
+
+    if (!authResult.ok || !authResult.session) {
+      return { ok: false, message: authResult.message };
+    }
+
+    const currentUserId = authResult.session.user.id;
+
+    await db.transaction(async (tx) => {
+      const [lastReceiptId, lastTransactionId] = await Promise.all([
+        getReceiptId(),
+        generateTransactionID("PURCHASE"),
+      ]);
+
+      const newReceiptId = generateProcurementId("GR", lastReceiptId);
+
+      const purchase = await tx.query.purchaseTable.findFirst({
+        where: eq(purchaseTable.idPurchase, validated.data.purchaseId),
+      });
+
+      if (!purchase) {
+        throw new Error(`Purchase ${validated.data.purchaseId} not found`);
+      }
+
+      if (purchase.status !== "SENT") {
+        throw new Error(
+          `Purchase ${validated.data.purchaseId} status bukan DELIVERED`,
+        );
+      }
+
+      await tx.insert(goodsReceiptTable).values({
+        idReceipt: newReceiptId,
+        purchaseId: validated.data.purchaseId,
+        receivedBy: currentUserId,
+      });
+
+      await tx.insert(transactionTable).values({
+        idTransaction: lastTransactionId,
+        type: "PURCHASE",
+        status: "COMPLETED",
+        userId: currentUserId,
+      });
+
+      for (const item of validated.data.items) {
+        const qtyReceived = Number(item.qtyReceived);
+
+        await tx.insert(goodsReceiptItemTable).values({
+          receiptId: newReceiptId,
+          itemId: item.itemId,
+          qtyReceived: item.qtyReceived,
+          qtyDamaged: item.qtyDamaged,
+        });
+
+        if (qtyReceived > 0) {
+          await tx.insert(itemMovementTable).values({
+            transactionId: lastTransactionId,
+            itemId: item.itemId,
+            type: "IN",
+            quantity: item.qtyReceived,
+          });
+        }
+      }
+
+      await tx
+        .update(purchaseTable)
+        .set({
+          status: "COMPLETED",
+        })
+        .where(eq(purchaseTable.idPurchase, validated.data.purchaseId));
+
+      // Create notification for procurement requester
+      // Notify that goods have been received and QC completed
+    });
+
+    invalidateItem();
+    invalidateProcurement();
+    invalidatePurchase();
+
+    return {
+      ok: true,
+      message: LABEL.INPUT.SUCCESS.SAVED,
+    };
+  } catch (error) {
+    console.error("Error verif procurement:", error);
+
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        purchaseId: values.purchaseId,
+      });
+    }
+
     return {
       ok: false,
       message: LABEL.ERROR.SERVER,

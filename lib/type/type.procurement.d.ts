@@ -18,7 +18,6 @@ export type TProcerement = {
   procurementItem: TProcerementItem[];
 };
 
-// lib/type/type.purchase.ts
 export type TPurchase = {
   idPurchase: string;
   procurementId: string;
@@ -50,4 +49,30 @@ export type TPurchaseSelect = {
   supplierId: string;
   status: statusPurchase;
   createdAt: Date;
+};
+
+export type TReceipt = {
+  idReceipt: string;
+  purchaseId: string;
+  receivedBy: string;
+  receivedByName: string;
+  createdAt: Date;
+  supplierName: string;
+  supplierStore: string;
+  procurementId: string;
+  totalItems: number;
+  totalReceived: number;
+  totalDamaged: number;
+  receiptItems: TReceiptItem[];
+};
+
+export type TReceiptItem = {
+  idReceiptItem: string;
+  receiptId: string;
+  itemId: string;
+  itemName: string;
+  categoryName: string;
+  unitName: string;
+  qtyReceived: string;
+  qtyDamaged: string;
 };

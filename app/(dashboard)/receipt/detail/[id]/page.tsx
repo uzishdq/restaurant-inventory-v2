@@ -1,11 +1,11 @@
 import { RenderError } from "@/components/render-error";
-import PurchaseDetail from "@/components/section/section-purchase-detail";
+import ReceiptDetail from "@/components/section/section-receipt-detail";
 import { LABEL } from "@/lib/constant";
 import { isProcurementId } from "@/lib/helper";
-import { getPurchaseById } from "@/lib/server/data-server/purchase";
+import { getReceiptById } from "@/lib/server/data-server/receipt";
 import React from "react";
 
-export default async function DetailPurchasePage({
+export default async function DetailReceiptPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -16,19 +16,19 @@ export default async function DetailPurchasePage({
     return RenderError(LABEL.ERROR[404]);
   }
 
-  const purchase = await getPurchaseById({ id: id, status: "ALL" });
+  const receipt = await getReceiptById(id);
 
-  if (!purchase.ok) {
+  if (!receipt.ok) {
     return RenderError(LABEL.ERROR.DESCRIPTION);
   }
 
-  if (!purchase.data) {
+  if (!receipt.data) {
     return RenderError(LABEL.ERROR.DATA_NOT_FOUND);
   }
 
   return (
     <section className="container py-6">
-      <PurchaseDetail data={purchase.data} />
+      <ReceiptDetail data={receipt.data} />
     </section>
   );
 }

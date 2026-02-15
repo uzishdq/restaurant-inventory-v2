@@ -33,3 +33,9 @@ export type statusPurchase =
   | "RECEIVED"
   | "COMPLETED"
   | "CANCELLED";
+
+export type typeTransactionType =
+  | "PURCHASE"
+  | "PRODUCTION"
+  | "SALES"
+  | "ADJUSTMENT";

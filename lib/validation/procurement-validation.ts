@@ -54,10 +54,59 @@ export const procurementByIdSchema = z.object({
 });
 
 // Purchase Schema
-
 export const purchaseByIdSchema = z.object({
   id: IdProcurementSchema,
   status: z.enum([...enumStatusPurchase, "ALL"], {
     error: "Status Pembelian Tidak sesuai",
   }),
 });
+
+export const verifyPurchaseSchema = z.object({
+  purchaseId: IdProcurementSchema,
+  items: z
+    .array(
+      z
+        .object({
+          itemId: IdItemSchema,
+          qtyOrdered: validatedQtySchema("jumlah dipesan"),
+          qtyReceived: validatedQtySchema("jumlah diterima", 0),
+          qtyDamaged: validatedQtySchema("jumlah tidak sesuai", 0),
+        })
+        .superRefine((item, ctx) => {
+          const received = Number(item.qtyReceived);
+          const damaged = Number(item.qtyDamaged);
+          const ordered = Number(item.qtyOrdered);
+
+          if (received + damaged > ordered) {
+            ctx.addIssue({
+              code: "custom",
+              message: `Tidak boleh melebihi jumlah dipesan`,
+              path: ["qtyReceived"],
+            });
+            ctx.addIssue({
+              code: "custom",
+              message: `Tidak boleh melebihi jumlah dipesan`,
+              path: ["qtyDamaged"],
+            });
+          }
+
+          if (received + damaged < ordered) {
+            ctx.addIssue({
+              code: "custom",
+              message: `Tidak boleh kurang dari jumlah dipesan`,
+              path: ["qtyReceived"],
+            });
+            ctx.addIssue({
+              code: "custom",
+              message: `Tidak boleh kurang dari jumlah dipesan`,
+              path: ["qtyDamaged"],
+            });
+          }
+        }),
+    )
+    .min(1, "Minimal 1 bahan baku"),
+});
+
+export type VerifyPurchaseValues = z.infer<typeof verifyPurchaseSchema>;
+
+// Receipt Schema

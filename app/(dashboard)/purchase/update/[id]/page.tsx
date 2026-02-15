@@ -1,11 +1,11 @@
+import PurchaseQCForm from "@/components/form/purchase/qc-purchase-form";
 import { RenderError } from "@/components/render-error";
-import PurchaseDetail from "@/components/section/section-purchase-detail";
+import { Card, CardContent } from "@/components/ui/card";
 import { LABEL } from "@/lib/constant";
 import { isProcurementId } from "@/lib/helper";
 import { getPurchaseById } from "@/lib/server/data-server/purchase";
-import React from "react";
 
-export default async function DetailPurchasePage({
+export default async function UpdatePurchasePage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -16,7 +16,7 @@ export default async function DetailPurchasePage({
     return RenderError(LABEL.ERROR[404]);
   }
 
-  const purchase = await getPurchaseById({ id: id, status: "ALL" });
+  const purchase = await getPurchaseById({ id: id, status: "SENT" });
 
   if (!purchase.ok) {
     return RenderError(LABEL.ERROR.DESCRIPTION);
@@ -27,8 +27,12 @@ export default async function DetailPurchasePage({
   }
 
   return (
-    <section className="container py-6">
-      <PurchaseDetail data={purchase.data} />
+    <section>
+      <Card className="w-full">
+        <CardContent>
+          <PurchaseQCForm purchase={purchase.data} />
+        </CardContent>
+      </Card>
     </section>
   );
 }

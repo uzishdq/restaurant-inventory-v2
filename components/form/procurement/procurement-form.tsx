@@ -17,13 +17,13 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, AlertCircle, Package } from "lucide-react";
-import { CustomSelect } from "./custom-select";
 import type { TItemSelect } from "@/lib/type/type.item";
 import {
   createProcurementSchema,
   CreateProcurementValues,
 } from "@/lib/validation/procurement-validation";
 import { createProcurement } from "@/lib/server/action-server/procurement";
+import { CustomSelect } from "../custom-select";
 
 interface IProcurementForm {
   items: TItemSelect[];

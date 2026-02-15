@@ -1,4 +1,4 @@
-import ProcurementForm from "@/components/form/procurement-form";
+import ProcurementForm from "@/components/form/procurement/procurement-form";
 import { RenderError } from "@/components/render-error";
 import { Card, CardContent } from "@/components/ui/card";
 import { LABEL } from "@/lib/constant";

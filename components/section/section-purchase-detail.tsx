@@ -11,7 +11,6 @@ import {
   Store,
   Calendar,
   ShoppingCart,
-  Phone,
   FileText,
   CheckCircle2,
   XCircle,

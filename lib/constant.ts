@@ -44,6 +44,10 @@ export const ROUTES = {
       UPDATE: (id: string) => `/purchase/update/${id}`,
       DETAIL: (id: string) => `/purchase/detail/${id}`,
     },
+    RECEIPT: {
+      INDEX: "/receipt",
+      DETAIL: (id: string) => `/receipt/detail/${id}`,
+    },
     REPORT: {
       TRANSACTION: "/report/transaction",
       FIND_LAPORAN_TRANSACTION: (query: string) =>
@@ -83,9 +87,14 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
     title: "Detail Pengadaan",
   },
 
+  //Receipt
+  { pattern: /^\/receipt$/, title: "Penerimaan Bahan Baku" },
+  { pattern: /^\/receipt\/detail\/[^/]+$/, title: "Detail Penerimaan" },
+
   // Purchase
   { pattern: /^\/purchase$/, title: "Pembelian Bahan Baku" },
   { pattern: /^\/purchase\/detail\/[^/]+$/, title: "Detail Pembelian" },
+  { pattern: /^\/purchase\/update\/[^/]+$/, title: "Penerimaan Bahan Baku" },
 
   // Transaction
   { pattern: /^\/dashboard\/create-transaction$/, title: "Buat Transaksi" },
@@ -123,7 +132,7 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
 
   // Account & Notification
   {
-    pattern: /^\/dashboard\/account$/,
+    pattern: /^\/account$/,
     title: "Akun Saya",
   },
   {
@@ -267,6 +276,11 @@ export const CACHE_TAGS = {
       kode: "last-code-purchase",
       list: "get-purchase",
       detail: "get-detail-purchase",
+    },
+    receipt: {
+      kode: "last-code-receipt",
+      list: "get-receipt",
+      detail: "get-detail-receipt",
     },
     notification: {
       kode: "last-code-notification",
