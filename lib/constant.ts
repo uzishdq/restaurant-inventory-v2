@@ -19,7 +19,7 @@ export const ROUTES = {
     },
     TRANSACTION: {
       CREATE: "/transaction/create-transaction",
-      MOVEMENT: "/transaction/item-movement",
+      MOVEMENT: "/transaction/movements",
       STOCK_IN: {
         INDEX: "/transaction/incoming-item",
         DETAIL: (id: string) => `/transaction/incoming-item/detail/${id}`,
@@ -97,8 +97,8 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
   { pattern: /^\/purchase\/update\/[^/]+$/, title: "Penerimaan Bahan Baku" },
 
   // Transaction
-  { pattern: /^\/dashboard\/create-transaction$/, title: "Buat Transaksi" },
-  { pattern: /^\/dashboard\/item-movement$/, title: "Pergerakan Bahan Baku" },
+  { pattern: /^\/transaction\/create-transaction$/, title: "Buat Transaksi" },
+  { pattern: /^\/transaction\/movements$/, title: "Pergerakan Bahan Baku" },
 
   // Stock Out
   {
@@ -286,6 +286,11 @@ export const CACHE_TAGS = {
       kode: "last-code-notification",
       list: "get-notification",
       detail: "get-detail-notification",
+    },
+    itemMov: {
+      kode: "last-code-itemMov",
+      list: "get-itemMov",
+      detail: "get-detail-itemMov",
     },
   },
 } as const;

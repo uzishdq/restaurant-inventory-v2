@@ -11,13 +11,16 @@ import {
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import {
+  ArrowDown,
+  ArrowUp,
   ArrowUpDown,
   ChevronDown,
   ChevronRight,
   MoreHorizontal,
+  Package,
 } from "lucide-react";
 import DialogForm from "../form/dialog-form";
-import { TItem, TItemSelect } from "@/lib/type/type.item";
+import { TItem, TItemMovement, TItemSelect } from "@/lib/type/type.item";
 import { BadgeCustom } from "./badge-custom";
 import { ItemDeteleForm } from "../form/item/delete-form-item";
 import { TUnit } from "@/lib/type/type.unit";
@@ -225,3 +228,141 @@ function DialogDelete({ value }: Readonly<TDialog>) {
     </DialogForm>
   );
 }
+
+const movementTypeConfig = {
+  IN: {
+    label: "Masuk",
+    icon: ArrowDown,
+    color: "bg-green-500",
+  },
+  OUT: {
+    label: "Keluar",
+    icon: ArrowUp,
+    color: "bg-red-500",
+  },
+};
+
+const transactionTypeConfig = {
+  PURCHASE: { label: "Pembelian", color: "bg-blue-500" },
+  PRODUCTION: { label: "Produksi", color: "bg-purple-500" },
+  SALES: { label: "Penjualan", color: "bg-orange-500" },
+  ADJUSTMENT: { label: "Penyesuaian", color: "bg-gray-500" },
+};
+
+const transactionStatusConfig = {
+  PENDING: { label: "Pending", color: "bg-yellow-500" },
+  COMPLETED: { label: "Selesai", color: "bg-green-500" },
+  CANCELLED: { label: "Batal", color: "bg-red-500" },
+};
+
+export const columnItemMovement: ColumnDef<TItemMovement>[] = [
+  {
+    accessorKey: "createdAt",
+    header: "Tanggal",
+    enableHiding: false,
+    cell: ({ row }) => (
+      <div className="font-medium whitespace-nowrap">
+        {formatDateWIB(row.getValue("createdAt"))}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "transactionId",
+    header: "ID Transaksi",
+    cell: ({ row }) => {
+      const id = row.original.transactionId;
+      return (
+        <div className="font-mono text-sm">
+          {id || <span className="text-muted-foreground">-</span>}
+        </div>
+      );
+    },
+  },
+  {
+    id: "transactionType",
+    header: "Jenis Transaksi",
+    cell: ({ row }) => {
+      const type = row.original.transactionType;
+      if (!type) return <span className="text-muted-foreground">-</span>;
+
+      const config = transactionTypeConfig[type];
+      return <Badge className={config.color}>{config.label}</Badge>;
+    },
+  },
+  {
+    accessorKey: "itemName",
+    header: "Item",
+    enableHiding: false,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <Package className="h-4 w-4 text-muted-foreground" />
+        <div>
+          <p className="font-medium">{row.original.itemName}</p>
+          <p className="text-xs text-muted-foreground">
+            {row.original.categoryName || "No Category"}
+          </p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "movement",
+    header: "Pergerakan",
+    enableHiding: false,
+    cell: ({ row }) => {
+      const movementType = row.original.movementType;
+      const config = movementTypeConfig[movementType];
+      const Icon = config.icon;
+
+      return (
+        <div className="flex items-center gap-2">
+          <div className={`p-1.5 rounded ${config.color}`}>
+            <Icon className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <p className="font-semibold">{config.label}</p>
+            <p className="text-xs text-muted-foreground">
+              {row.original.quantity} {row.original.unitName}
+            </p>
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "quantity",
+    header: "Qty",
+    cell: ({ row }) => (
+      <div className="text-right">
+        <p className="font-bold text-lg">
+          {row.original.movementType === "OUT" && "-"}
+          {row.getValue("quantity")}
+        </p>
+        <p className="text-xs text-muted-foreground">{row.original.unitName}</p>
+      </div>
+    ),
+  },
+  {
+    id: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.transactionStatus;
+      if (!status) return <span className="text-muted-foreground">-</span>;
+
+      const config = transactionStatusConfig[status];
+      return <Badge className={config.color}>{config.label}</Badge>;
+    },
+  },
+  {
+    accessorKey: "userName",
+    header: "Oleh",
+    cell: ({ row }) => {
+      const name = row.original.userName;
+      return (
+        <div className="capitalize">
+          {name || <span className="text-muted-foreground">System</span>}
+        </div>
+      );
+    },
+  },
+];

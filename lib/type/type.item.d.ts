@@ -31,3 +31,18 @@ export type TItemSelect = {
   currentStock: string;
   unitName: string | null;
 };
+
+export type TItemMovement = {
+  idMovement: string;
+  transactionId: string | null;
+  transactionType: "PURCHASE" | "PRODUCTION" | "SALES" | "ADJUSTMENT" | null;
+  transactionStatus: "PENDING" | "COMPLETED" | "CANCELLED" | null;
+  itemId: string;
+  itemName: string;
+  categoryName: string | null;
+  unitName: string | null;
+  movementType: "IN" | "OUT";
+  quantity: string;
+  userName: string | null;
+  createdAt: Date;
+};

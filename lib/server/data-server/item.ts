@@ -8,10 +8,12 @@ import {
   itemBomTable,
   itemMovementTable,
   itemTable,
+  transactionTable,
   unitTable,
+  userTable,
 } from "@/lib/db/schema";
 import { typeGetItem, typeItems } from "@/lib/type/type.helper";
-import { TItem, TItemSelect } from "@/lib/type/type.item";
+import { TItem, TItemMovement, TItemSelect } from "@/lib/type/type.item";
 import { TypeItemSchema } from "@/lib/validation/master-validation";
 import { desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -224,6 +226,70 @@ export const getSelectItem = unstable_cache(
   ["get-item-select"],
   {
     tags: [CACHE_TAGS.master.item.select],
+    revalidate: 3600,
+  },
+);
+
+export const getItemMovList = unstable_cache(
+  async () => {
+    try {
+      const result = await db
+        .select({
+          idMovement: itemMovementTable.idMovement,
+          transactionId: itemMovementTable.transactionId,
+          transactionType: transactionTable.type,
+          transactionStatus: transactionTable.status,
+          itemId: itemMovementTable.itemId,
+          itemName: itemTable.name,
+          categoryName: categoryTable.name,
+          unitName: unitTable.name,
+          movementType: itemMovementTable.type,
+          quantity: itemMovementTable.quantity,
+          userName: userTable.name,
+          createdAt: itemMovementTable.createdAt,
+        })
+        .from(itemMovementTable)
+        .leftJoin(
+          transactionTable,
+          eq(itemMovementTable.transactionId, transactionTable.idTransaction),
+        )
+        .leftJoin(itemTable, eq(itemMovementTable.itemId, itemTable.idItem))
+        .leftJoin(
+          categoryTable,
+          eq(itemTable.categoryId, categoryTable.idCategory),
+        )
+        .leftJoin(unitTable, eq(itemTable.unitId, unitTable.idUnit))
+        .leftJoin(userTable, eq(transactionTable.userId, userTable.idUser))
+        .orderBy(desc(itemMovementTable.createdAt));
+
+      const data: TItemMovement[] = result.map((row) => ({
+        idMovement: row.idMovement,
+        transactionId: row.transactionId,
+        transactionType: row.transactionType,
+        transactionStatus: row.transactionStatus,
+        itemId: row.itemId,
+        itemName: row.itemName ?? "-",
+        categoryName: row.categoryName,
+        unitName: row.unitName,
+        movementType: row.movementType,
+        quantity: row.quantity,
+        userName: row.userName,
+        createdAt: row.createdAt,
+      }));
+
+      if (data.length > 0) {
+        return { ok: true, data };
+      } else {
+        return { ok: true, data: [] };
+      }
+    } catch (error) {
+      console.error("error get item mov data : ", error);
+      return { ok: false, data: null };
+    }
+  },
+  ["get-itemMov"],
+  {
+    tags: [CACHE_TAGS.transaction.itemMov.list],
     revalidate: 3600,
   },
 );

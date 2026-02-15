@@ -42,3 +42,8 @@ export function invalidatePurchase() {
   revalidateTag(CACHE_TAGS.transaction.purchase.detail, { expire: 0 });
   revalidatePath(ROUTES.AUTH.PURCHASE.INDEX);
 }
+
+export function invalidateItemMov() {
+  revalidateTag(CACHE_TAGS.transaction.itemMov.list, { expire: 0 });
+  revalidatePath(ROUTES.AUTH.TRANSACTION.MOVEMENT);
+}
