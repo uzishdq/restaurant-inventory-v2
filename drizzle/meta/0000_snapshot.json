@@ -1,5 +1,5 @@
 {
-  "id": "562479ed-897c-4530-9ad4-71dde5687005",
+  "id": "7ba5a1db-3fb0-41bb-88d4-0e3917c46adc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -73,6 +73,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'0'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -218,7 +224,7 @@
             "id_bom"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "cascade"
         },
         "item_bom_detail_raw_item_id_item_id_item_fk": {
           "name": "item_bom_detail_raw_item_id_item_id_item_fk",
@@ -278,7 +284,7 @@
             "id_item"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -356,8 +362,8 @@
           "columnsTo": [
             "id_item"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -429,8 +435,8 @@
           "columnsTo": [
             "id_unit"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "item_category_id_category_id_category_fk": {
           "name": "item_category_id_category_id_category_fk",
@@ -442,8 +448,8 @@
           "columnsTo": [
             "id_category"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -537,8 +543,8 @@
           "columnsTo": [
             "id_user"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "notifications_supplier_id_supplier_id_supplier_fk": {
           "name": "notifications_supplier_id_supplier_id_supplier_fk",
@@ -550,8 +556,8 @@
           "columnsTo": [
             "id_supplier"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -609,7 +615,7 @@
             "id_procurement"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "cascade"
         },
         "procurement_item_item_id_item_id_item_fk": {
           "name": "procurement_item_item_id_item_id_item_fk",
@@ -621,8 +627,8 @@
           "columnsTo": [
             "id_item"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -661,6 +667,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -675,8 +688,299 @@
           "columnsTo": [
             "id_user"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.production_material": {
+      "name": "production_material",
+      "schema": "",
+      "columns": {
+        "id_production_material": {
+          "name": "id_production_material",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "production_order_id": {
+          "name": "production_order_id",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bom_detail_id": {
+          "name": "bom_detail_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qty_required": {
+          "name": "qty_required",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qty_used": {
+          "name": "qty_used",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "production_material_production_order_id_production_order_id_production_order_fk": {
+          "name": "production_material_production_order_id_production_order_id_production_order_fk",
+          "tableFrom": "production_material",
+          "tableTo": "production_order",
+          "columnsFrom": [
+            "production_order_id"
+          ],
+          "columnsTo": [
+            "id_production_order"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "production_material_bom_detail_id_item_bom_detail_id_bom_detail_fk": {
+          "name": "production_material_bom_detail_id_item_bom_detail_id_bom_detail_fk",
+          "tableFrom": "production_material",
+          "tableTo": "item_bom_detail",
+          "columnsFrom": [
+            "bom_detail_id"
+          ],
+          "columnsTo": [
+            "id_bom_detail"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "production_material_item_id_item_id_item_fk": {
+          "name": "production_material_item_id_item_id_item_fk",
+          "tableFrom": "production_material",
+          "tableTo": "item",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id_item"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.production_order": {
+      "name": "production_order",
+      "schema": "",
+      "columns": {
+        "id_production_order": {
+          "name": "id_production_order",
+          "type": "varchar(20)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "procurement_id": {
+          "name": "procurement_id",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "procurement_item_id": {
+          "name": "procurement_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qty_target": {
+          "name": "qty_target",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qty_produced": {
+          "name": "qty_produced",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "status": {
+          "name": "status",
+          "type": "production_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'DRAFT'"
+        },
+        "scheduled_date": {
+          "name": "scheduled_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completed_date": {
+          "name": "completed_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "production_order_procurement_id_procurement_id_procurement_fk": {
+          "name": "production_order_procurement_id_procurement_id_procurement_fk",
+          "tableFrom": "production_order",
+          "tableTo": "procurement",
+          "columnsFrom": [
+            "procurement_id"
+          ],
+          "columnsTo": [
+            "id_procurement"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "production_order_procurement_item_id_procurement_item_id_procurement_item_fk": {
+          "name": "production_order_procurement_item_id_procurement_item_id_procurement_item_fk",
+          "tableFrom": "production_order",
+          "tableTo": "procurement_item",
+          "columnsFrom": [
+            "procurement_item_id"
+          ],
+          "columnsTo": [
+            "id_procurement_item"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "production_order_item_id_item_id_item_fk": {
+          "name": "production_order_item_id_item_id_item_fk",
+          "tableFrom": "production_order",
+          "tableTo": "item",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id_item"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.production_record": {
+      "name": "production_record",
+      "schema": "",
+      "columns": {
+        "id_production_record": {
+          "name": "id_production_record",
+          "type": "varchar(20)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "production_order_id": {
+          "name": "production_order_id",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "produced_by": {
+          "name": "produced_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qty_produced": {
+          "name": "qty_produced",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "production_record_production_order_id_production_order_id_production_order_fk": {
+          "name": "production_record_production_order_id_production_order_id_production_order_fk",
+          "tableFrom": "production_record",
+          "tableTo": "production_order",
+          "columnsFrom": [
+            "production_order_id"
+          ],
+          "columnsTo": [
+            "id_production_order"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "production_record_produced_by_user_id_user_fk": {
+          "name": "production_record_produced_by_user_id_user_fk",
+          "tableFrom": "production_record",
+          "tableTo": "user",
+          "columnsFrom": [
+            "produced_by"
+          ],
+          "columnsTo": [
+            "id_user"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -734,7 +1038,7 @@
             "id_purchase"
           ],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "cascade"
         },
         "purchase_item_procurement_item_id_procurement_item_id_procurement_item_fk": {
           "name": "purchase_item_procurement_item_id_procurement_item_id_procurement_item_fk",
@@ -746,8 +1050,8 @@
           "columnsTo": [
             "id_procurement_item"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "purchase_item_item_id_item_id_item_fk": {
           "name": "purchase_item_item_id_item_id_item_fk",
@@ -819,8 +1123,8 @@
           "columnsTo": [
             "id_procurement"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         },
         "purchase_supplier_id_supplier_id_supplier_fk": {
           "name": "purchase_supplier_id_supplier_id_supplier_fk",
@@ -832,8 +1136,8 @@
           "columnsTo": [
             "id_supplier"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -945,8 +1249,8 @@
           "columnsTo": [
             "id_user"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1089,6 +1393,17 @@
       "values": [
         "DRAFT",
         "ON_PROGRESS",
+        "COMPLETED",
+        "CANCELLED"
+      ]
+    },
+    "public.production_status": {
+      "name": "production_status",
+      "schema": "public",
+      "values": [
+        "DRAFT",
+        "SCHEDULED",
+        "IN_PROGRESS",
         "COMPLETED",
         "CANCELLED"
       ]

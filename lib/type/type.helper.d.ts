@@ -6,7 +6,7 @@ export type roleType =
   | "KITCHEN"
   | "MANAGER";
 
-export type prefixProcurementType = "PR" | "PO" | "GR";
+export type prefixProcurementType = "PR" | "PO" | "GR" | "PD" | "PC";
 
 export type FormMode = "create" | "edit";
 

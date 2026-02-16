@@ -64,6 +64,15 @@ export const purchaseStatusEnum = pgEnum("purchase_status", [
   "CANCELLED",
 ]);
 
+// PRODUCTION STATUS
+export const productionStatusEnum = pgEnum("production_status", [
+  "DRAFT",
+  "SCHEDULED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+]);
+
 export const notificationRecipientEnum = pgEnum("notification_recipient", [
   "USER",
   "SUPPLIER",
@@ -119,10 +128,16 @@ export const itemTable = pgTable("item", {
   idItem: varchar("id_item", { length: 20 }).primaryKey(),
   name: varchar("name", { length: 255 }).unique().notNull(),
   unitId: uuid("unit_id")
-    .references(() => unitTable.idUnit)
+    .references(() => unitTable.idUnit, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   categoryId: uuid("category_id")
-    .references(() => categoryTable.idCategory)
+    .references(() => categoryTable.idCategory, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   type: typeItemEnum("type_item").default("RAW_MATERIAL").notNull(),
   minStock: numeric("min_stock").default("0").notNull(),
@@ -133,7 +148,10 @@ export const itemTable = pgTable("item", {
 export const itemBomTable = pgTable("item_bom", {
   idBom: uuid("id_bom").defaultRandom().primaryKey(),
   itemId: varchar("item_id", { length: 20 })
-    .references(() => itemTable.idItem, { onDelete: "cascade" })
+    .references(() => itemTable.idItem, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -142,7 +160,10 @@ export const itemBomTable = pgTable("item_bom", {
 export const itemBomDetailTable = pgTable("item_bom_detail", {
   idBomDetail: uuid("id_bom_detail").defaultRandom().primaryKey(),
   bomId: uuid("bom_id")
-    .references(() => itemBomTable.idBom, { onDelete: "cascade" })
+    .references(() => itemBomTable.idBom, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   rawItemId: varchar("raw_item_id", { length: 20 })
     .references(() => itemTable.idItem)
@@ -157,19 +178,32 @@ export const itemBomDetailTable = pgTable("item_bom_detail", {
 export const procurementTable = pgTable("procurement", {
   idProcurement: varchar("id_procurement", { length: 20 }).primaryKey(),
   requestedBy: uuid("requested_by")
-    .references(() => userTable.idUser)
+    .references(() => userTable.idUser, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   status: procurementStatusEnum("status").default("DRAFT").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export const procurementItemTable = pgTable("procurement_item", {
   idProcurementItem: uuid("id_procurement_item").defaultRandom().primaryKey(),
   procurementId: varchar("procurement_id", { length: 20 })
-    .references(() => procurementTable.idProcurement, { onDelete: "cascade" })
+    .references(() => procurementTable.idProcurement, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   itemId: varchar("item_id", { length: 20 })
-    .references(() => itemTable.idItem)
+    .references(() => itemTable.idItem, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   qtyRequested: numeric("qty_requested").notNull(),
   notes: text("notes"),
@@ -178,10 +212,16 @@ export const procurementItemTable = pgTable("procurement_item", {
 export const purchaseTable = pgTable("purchase", {
   idPurchase: varchar("id_purchase", { length: 20 }).primaryKey(),
   procurementId: varchar("procurement_id", { length: 20 })
-    .references(() => procurementTable.idProcurement)
+    .references(() => procurementTable.idProcurement, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   supplierId: uuid("supplier_id")
-    .references(() => supplierTable.idSupplier)
+    .references(() => supplierTable.idSupplier, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   status: purchaseStatusEnum("status").default("DRAFT").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -190,10 +230,16 @@ export const purchaseTable = pgTable("purchase", {
 export const purchaseItemTable = pgTable("purchase_item", {
   idPurchaseItem: uuid("id_purchase_item").defaultRandom().primaryKey(),
   purchaseId: varchar("purchase_id", { length: 20 })
-    .references(() => purchaseTable.idPurchase, { onDelete: "cascade" })
+    .references(() => purchaseTable.idPurchase, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   procurementItemId: uuid("procurement_item_id")
-    .references(() => procurementItemTable.idProcurementItem)
+    .references(() => procurementItemTable.idProcurementItem, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   itemId: varchar("item_id", { length: 20 })
     .references(() => itemTable.idItem)
@@ -222,6 +268,87 @@ export const goodsReceiptItemTable = pgTable("goods_receipt_item", {
     .notNull(),
   qtyReceived: numeric("qty_received").notNull(),
   qtyDamaged: numeric("qty_damaged").default("0").notNull(),
+  notes: text("notes"),
+});
+
+export const productionOrderTable = pgTable("production_order", {
+  idProductionOrder: varchar("id_production_order", {
+    length: 20,
+  }).primaryKey(),
+  procurementId: varchar("procurement_id", { length: 20 })
+    .references(() => procurementTable.idProcurement, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  procurementItemId: uuid("procurement_item_id")
+    .references(() => procurementItemTable.idProcurementItem, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  itemId: varchar("item_id", { length: 20 })
+    .references(() => itemTable.idItem, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  qtyTarget: numeric("qty_target").notNull(),
+  qtyProduced: numeric("qty_produced").default("0").notNull(),
+  status: productionStatusEnum("status").default("DRAFT").notNull(),
+  scheduledDate: timestamp("scheduled_date"),
+  completedDate: timestamp("completed_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// PRODUCTION MATERIAL (BOM materials yang dibutuhkan)
+export const productionMaterialTable = pgTable("production_material", {
+  idProductionMaterial: uuid("id_production_material")
+    .defaultRandom()
+    .primaryKey(),
+  productionOrderId: varchar("production_order_id", { length: 20 })
+    .references(() => productionOrderTable.idProductionOrder, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  bomDetailId: uuid("bom_detail_id")
+    .references(() => itemBomDetailTable.idBomDetail, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  itemId: varchar("item_id", { length: 20 })
+    .references(() => itemTable.idItem, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  qtyRequired: numeric("qty_required").notNull(),
+  qtyUsed: numeric("qty_used").default("0").notNull(),
+});
+
+// PRODUCTION RECORD (Actual production activity/batch)
+export const productionRecordTable = pgTable("production_record", {
+  idProductionRecord: varchar("id_production_record", {
+    length: 20,
+  }).primaryKey(),
+  productionOrderId: varchar("production_order_id", { length: 20 })
+    .references(() => productionOrderTable.idProductionOrder, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  producedBy: uuid("produced_by")
+    .references(() => userTable.idUser, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    })
+    .notNull(),
+  qtyProduced: numeric("qty_produced").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const transactionTable = pgTable("transaction", {
@@ -231,7 +358,10 @@ export const transactionTable = pgTable("transaction", {
     .default("PENDING")
     .notNull(),
   userId: uuid("user_id")
-    .references(() => userTable.idUser)
+    .references(() => userTable.idUser, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -242,7 +372,10 @@ export const itemMovementTable = pgTable("item_movement", {
     () => transactionTable.idTransaction,
   ),
   itemId: varchar("item_id", { length: 20 })
-    .references(() => itemTable.idItem)
+    .references(() => itemTable.idItem, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    })
     .notNull(),
   type: typeMovementEnum("type_movement").notNull(),
   quantity: numeric("quantity").notNull(),
@@ -252,8 +385,14 @@ export const itemMovementTable = pgTable("item_movement", {
 export const notificationsTable = pgTable("notifications", {
   idNotification: uuid("id_notification").defaultRandom().primaryKey(),
   recipientType: notificationRecipientEnum("recipient_type").notNull(),
-  userId: uuid("user_id").references(() => userTable.idUser),
-  supplierId: uuid("supplier_id").references(() => supplierTable.idSupplier),
+  userId: uuid("user_id").references(() => userTable.idUser, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
+  supplierId: uuid("supplier_id").references(() => supplierTable.idSupplier, {
+    onDelete: "cascade",
+    onUpdate: "cascade",
+  }),
   refType: notificationRefEnum("ref_type").notNull(),
   refId: varchar("ref_id", { length: 20 }).notNull(),
   message: text("message").notNull(),
@@ -269,6 +408,7 @@ export const userRelations = relations(userTable, ({ many }) => ({
   transactions: many(transactionTable),
   procurements: many(procurementTable),
   goodsReceipts: many(goodsReceiptTable),
+  productionRecords: many(productionRecordTable),
   notifications: many(notificationsTable),
 }));
 
@@ -300,6 +440,8 @@ export const itemRelations = relations(itemTable, ({ one, many }) => ({
   procurementItems: many(procurementItemTable),
   purchaseItems: many(purchaseItemTable),
   goodsReceiptItems: many(goodsReceiptItemTable),
+  productionOrders: many(productionOrderTable),
+  productionMaterials: many(productionMaterialTable),
 }));
 
 export const itemBomRelations = relations(itemBomTable, ({ one, many }) => ({
@@ -312,7 +454,7 @@ export const itemBomRelations = relations(itemBomTable, ({ one, many }) => ({
 
 export const itemBomDetailRelations = relations(
   itemBomDetailTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     bom: one(itemBomTable, {
       fields: [itemBomDetailTable.bomId],
       references: [itemBomTable.idBom],
@@ -321,6 +463,7 @@ export const itemBomDetailRelations = relations(
       fields: [itemBomDetailTable.rawItemId],
       references: [itemTable.idItem],
     }),
+    productionMaterials: many(productionMaterialTable),
   }),
 );
 
@@ -333,6 +476,7 @@ export const procurementRelations = relations(
     }),
     items: many(procurementItemTable),
     purchases: many(purchaseTable),
+    productionOrders: many(productionOrderTable),
     notifications: many(notificationsTable),
   }),
 );
@@ -349,6 +493,7 @@ export const procurementItemRelations = relations(
       references: [itemTable.idItem],
     }),
     purchaseItems: many(purchaseItemTable),
+    productionOrders: many(productionOrderTable),
   }),
 );
 
@@ -410,6 +555,58 @@ export const goodsReceiptItemRelations = relations(
     item: one(itemTable, {
       fields: [goodsReceiptItemTable.itemId],
       references: [itemTable.idItem],
+    }),
+  }),
+);
+
+export const productionOrderRelations = relations(
+  productionOrderTable,
+  ({ one, many }) => ({
+    procurement: one(procurementTable, {
+      fields: [productionOrderTable.procurementId],
+      references: [procurementTable.idProcurement],
+    }),
+    procurementItem: one(procurementItemTable, {
+      fields: [productionOrderTable.procurementItemId],
+      references: [procurementItemTable.idProcurementItem],
+    }),
+    item: one(itemTable, {
+      fields: [productionOrderTable.itemId],
+      references: [itemTable.idItem],
+    }),
+    materials: many(productionMaterialTable),
+    records: many(productionRecordTable),
+  }),
+);
+
+export const productionMaterialRelations = relations(
+  productionMaterialTable,
+  ({ one }) => ({
+    productionOrder: one(productionOrderTable, {
+      fields: [productionMaterialTable.productionOrderId],
+      references: [productionOrderTable.idProductionOrder],
+    }),
+    bomDetail: one(itemBomDetailTable, {
+      fields: [productionMaterialTable.bomDetailId],
+      references: [itemBomDetailTable.idBomDetail],
+    }),
+    item: one(itemTable, {
+      fields: [productionMaterialTable.itemId],
+      references: [itemTable.idItem],
+    }),
+  }),
+);
+
+export const productionRecordRelations = relations(
+  productionRecordTable,
+  ({ one }) => ({
+    productionOrder: one(productionOrderTable, {
+      fields: [productionRecordTable.productionOrderId],
+      references: [productionOrderTable.idProductionOrder],
+    }),
+    producer: one(userTable, {
+      fields: [productionRecordTable.producedBy],
+      references: [userTable.idUser],
     }),
   }),
 );

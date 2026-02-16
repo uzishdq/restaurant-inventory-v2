@@ -282,15 +282,20 @@ export const CACHE_TAGS = {
       list: "get-receipt",
       detail: "get-detail-receipt",
     },
-    notification: {
-      kode: "last-code-notification",
-      list: "get-notification",
-      detail: "get-detail-notification",
+    production: {
+      kode: "last-code-production",
+      list: "get-production",
+      detail: "get-detail-production",
     },
     itemMov: {
       kode: "last-code-itemMov",
       list: "get-itemMov",
       detail: "get-detail-itemMov",
+    },
+    notification: {
+      kode: "last-code-notification",
+      list: "get-notification",
+      detail: "get-detail-notification",
     },
   },
 } as const;
