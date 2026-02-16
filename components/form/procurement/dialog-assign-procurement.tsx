@@ -149,15 +149,15 @@ export function DialogAssignItems({
       <DialogTrigger asChild>
         <Button type="button" size="sm" variant="outline">
           <Plus className="mr-2 h-4 w-4" />
-          Assign Item
+          Bahan Baku
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Assign Items ke {supplierName}</DialogTitle>
+          <DialogTitle>Pilih Bahan Baku untuk {supplierName}</DialogTitle>
           <DialogDescription>
-            Pilih item yang akan dibeli dari supplier ini. Item yang sudah
-            diassign ke supplier lain tidak akan muncul di list.
+            Pilih bahan baku yang akan dibeli dari supplier ini. Bahan baku yang
+            sudah ditetapkan ke supplier lain tidak akan ditampilkan.
           </DialogDescription>
         </DialogHeader>
 
@@ -216,10 +216,10 @@ export function DialogAssignItems({
             {selectedIds.size > 0 ? (
               <>
                 <strong className="text-foreground">{selectedIds.size}</strong>{" "}
-                item dipilih dari {availableItems.length} tersedia
+                bahan baku dipilih dari {availableItems.length} tersedia
               </>
             ) : (
-              <>Belum ada item dipilih</>
+              <>Belum ada bahan baku dipilih</>
             )}
           </p>
           <div className="flex gap-2">
@@ -236,7 +236,7 @@ export function DialogAssignItems({
               disabled={selectedIds.size === 0}
             >
               <Check className="h-4 w-4" />
-              Assign ({selectedIds.size})
+              Tambah ({selectedIds.size})
             </Button>
           </div>
         </DialogFooter>

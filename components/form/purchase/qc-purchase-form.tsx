@@ -1,4 +1,3 @@
-// components/forms/purchase-qc-form.tsx
 "use client";
 
 import React from "react";
@@ -298,6 +297,7 @@ export default function PurchaseQCForm({
   const form = useForm<VerifyPurchaseValues>({
     resolver: zodResolver(verifyPurchaseSchema),
     defaultValues: {
+      procurementId: purchase.procurementId,
       purchaseId: purchase.idPurchase,
       items: purchase.purchaseItems.map((item) => ({
         itemId: item.itemId,
@@ -320,7 +320,7 @@ export default function PurchaseQCForm({
       if (result.ok) {
         toast.success(result.message);
         form.reset();
-        router.push(ROUTES.AUTH.PURCHASE.INDEX);
+        router.push(ROUTES.AUTH.RECEIPT.INDEX);
       } else {
         toast.error(result.message);
       }

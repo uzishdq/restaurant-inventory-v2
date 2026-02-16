@@ -45,6 +45,8 @@ import { CustomSelect } from "../custom-select";
 import { DialogAssignItems } from "./dialog-assign-procurement";
 import { formatDateWIB } from "@/lib/helper";
 import { verifProcurement } from "@/lib/server/action-server/procurement";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/lib/constant";
 
 interface ProcurementApprovalFormProps {
   procurement: TProcerement;
@@ -411,6 +413,7 @@ export default function ProcurementApprovalForm({
   suppliers = [],
   className,
 }: Readonly<ProcurementApprovalFormProps>) {
+  const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<VerifyProcurementValues>({
@@ -469,6 +472,7 @@ export default function ProcurementApprovalForm({
       if (result.ok) {
         toast.success(result.message);
         form.reset();
+        router.push(ROUTES.AUTH.PURCHASE.INDEX);
       } else {
         toast.error(result.message);
       }

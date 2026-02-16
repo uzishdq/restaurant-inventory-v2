@@ -200,6 +200,7 @@ export const getSelectItem = unstable_cache(
         .select({
           idItem: itemTable.idItem,
           name: itemTable.name,
+          minStock: itemTable.minStock,
           unitName: unitTable.name,
         })
         .from(itemTable)
@@ -210,6 +211,7 @@ export const getSelectItem = unstable_cache(
         idItem: item.idItem,
         name: item.name,
         unitName: item.unitName,
+        minStock: item.minStock,
         currentStock: stockMap.get(item.idItem) || "0",
       }));
 

@@ -11,7 +11,7 @@ export function ReceiptDetailRow({
         <Package className="h-4 w-4" />
         Detail Penerimaan ({items.length})
       </h4>
-      <div className="space-y-2">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <div
             key={item.idReceiptItem}
@@ -27,26 +27,26 @@ export function ReceiptDetailRow({
             </div>
             <div className="flex items-center gap-3 shrink-0">
               {Number(item.qtyReceived) > 0 && (
-                <div className="flex items-center gap-1">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <Badge
-                    variant="outline"
-                    className="bg-green-50 text-green-700 border-green-300"
-                  >
+                <Badge
+                  variant="outline"
+                  className="bg-green-50 text-green-700 border-green-300"
+                >
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
                     {Number(item.qtyReceived).toFixed(2)} {item.unitName}
-                  </Badge>
-                </div>
+                  </div>
+                </Badge>
               )}
               {Number(item.qtyDamaged) > 0 && (
-                <div className="flex items-center gap-1">
-                  <XCircle className="h-4 w-4 text-red-600" />
-                  <Badge
-                    variant="outline"
-                    className="bg-red-50 text-red-700 border-red-300"
-                  >
+                <Badge
+                  variant="outline"
+                  className="bg-red-50 text-red-700 border-red-300"
+                >
+                  <div className="flex items-center gap-1">
+                    <XCircle className="h-4 w-4 text-red-600" />
                     {Number(item.qtyDamaged).toFixed(2)} {item.unitName}
-                  </Badge>
-                </div>
+                  </div>
+                </Badge>
               )}
             </div>
           </div>

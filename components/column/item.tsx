@@ -26,8 +26,7 @@ import { ItemDeteleForm } from "../form/item/delete-form-item";
 import { TUnit } from "@/lib/type/type.unit";
 import { TCategory } from "@/lib/type/type.categories";
 import IItemForm from "../form/item/item-form";
-import { Badge } from "../ui/badge";
-import { formatDateWIB } from "@/lib/helper";
+import { formatDateWIB, getStockStatus } from "@/lib/helper";
 
 export const columnItem = ({
   units,
@@ -104,6 +103,7 @@ export const columnItem = ({
   },
   {
     accessorKey: "lastMovementDate",
+    enableHiding: false,
     header: ({ column }) => {
       return (
         <Button
@@ -142,18 +142,12 @@ export const columnItem = ({
     id: "stockStatus",
     header: "Status Stok",
     cell: ({ row }) => {
-      const stock = Number.parseFloat(row.original.currentStock);
-      const minStock = Number.parseFloat(row.original.minStock);
+      const status = getStockStatus(
+        row.original.currentStock,
+        row.original.minStock,
+      );
 
-      if (stock <= 0) {
-        return <Badge variant="destructive">Habis</Badge>;
-      }
-
-      if (stock < minStock) {
-        return <Badge variant="secondary">Rendah</Badge>;
-      }
-
-      return <Badge variant="outline">Aman</Badge>;
+      return <BadgeCustom value={status} category="stockStatus" />;
     },
   },
   {

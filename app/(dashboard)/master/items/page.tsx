@@ -27,6 +27,7 @@ export default async function ItemsPage() {
     .map((item) => ({
       idItem: item.idItem,
       name: item.name,
+      minStock: item.minStock,
       currentStock: item.currentStock,
       unitName: item.unitName ?? null,
     }));

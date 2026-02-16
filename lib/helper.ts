@@ -1,6 +1,11 @@
 import { ArrowRightLeft, Database, Files, PackagePlus } from "lucide-react";
 import { ROUTE_TITLES, ROUTES } from "./constant";
-import { prefixProcurementType, roleType, typeItems } from "./type/type.helper";
+import {
+  prefixProcurementType,
+  roleType,
+  stockStatus,
+  typeItems,
+} from "./type/type.helper";
 
 export function getPageTitle(pathname: string): string {
   const title =
@@ -49,7 +54,7 @@ export function getFilteredNav(role?: roleType) {
       icon: PackagePlus,
       items: [
         {
-          title: "Pengajuan Pembelian",
+          title: "Pengadaan Bahan Baku",
           url: ROUTES.AUTH.PROCUREMENT.INDEX,
         },
         {
@@ -238,4 +243,22 @@ export function generateSequentialIds(
 
 export function isProcurementId(id: string) {
   return /^(PR|PO|GR)-\d{4}$/.test(id);
+}
+
+export function getStockStatus(
+  currentStock: string,
+  minStock: string,
+): stockStatus {
+  const stock = Number.parseFloat(currentStock);
+  const min = Number.parseFloat(minStock);
+
+  if (stock <= 0) {
+    return "OUT_OF_STOCK";
+  }
+
+  if (stock < min) {
+    return "LOW_STOCK";
+  }
+
+  return "SUFFICIENT";
 }

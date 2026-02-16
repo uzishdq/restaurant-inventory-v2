@@ -12,6 +12,7 @@ export const revalidateData = async () => {
         if (tags.kode) revalidateTag(tags.kode, { expire: 0 });
         if (tags.list) revalidateTag(tags.list, { expire: 0 });
         if (tags.detail) revalidateTag(tags.detail, { expire: 0 });
+        if (tags.select) revalidateTag(tags.select, { expire: 0 });
       });
     }
     return {

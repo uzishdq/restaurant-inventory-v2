@@ -13,6 +13,7 @@ export default async function PurchasePage() {
   if (!purchase.ok || !purchase.data) {
     return RenderError(LABEL.ERROR.DESCRIPTION);
   }
+
   const { sentPurchase, completedPurchase } = purchase.data.reduce(
     (acc, item) => {
       if (item.status === "SENT") {

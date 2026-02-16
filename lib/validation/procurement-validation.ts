@@ -62,6 +62,7 @@ export const purchaseByIdSchema = z.object({
 });
 
 export const verifyPurchaseSchema = z.object({
+  procurementId: IdProcurementSchema,
   purchaseId: IdProcurementSchema,
   items: z
     .array(

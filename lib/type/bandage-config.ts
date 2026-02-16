@@ -3,6 +3,7 @@ import {
   statusProcurement,
   statusPurchase,
   statusTransaction,
+  stockStatus,
   typeItems,
   typeMovement,
   typeTransactionType,
@@ -15,7 +16,8 @@ export type BadgeCategory =
   | "typeItem"
   | "transactionStatus"
   | "movementType"
-  | "transactionType";
+  | "transactionType"
+  | "stockStatus";
 
 export interface BadgeConfig {
   label: string;
@@ -70,6 +72,12 @@ export const BADGE_CONFIG = {
     SALES: { label: "Penjualan", color: "bg-orange-500" },
     ADJUSTMENT: { label: "Penyesuaian", color: "bg-gray-500" },
   } satisfies Record<typeTransactionType, BadgeConfig>,
+
+  stockStatus: {
+    OUT_OF_STOCK: { label: "Habis", color: "bg-red-500" },
+    LOW_STOCK: { label: "Rendah", color: "bg-yellow-500" },
+    SUFFICIENT: { label: "Aman", color: "bg-green-500" },
+  } satisfies Record<stockStatus, BadgeConfig>,
 } as const;
 
 // Helper function to get badge config safely

@@ -10,9 +10,9 @@ export function PurchaseDetailRow({
     <div className="bg-muted/30 p-4 border-t">
       <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
         <Package className="h-4 w-4" />
-        Detail Bahan Baku ({items.length})
+        Detail Pembelian Bahan Baku ({items.length})
       </h4>
-      <div className="space-y-2">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <div
             key={item.idPurchaseItem}

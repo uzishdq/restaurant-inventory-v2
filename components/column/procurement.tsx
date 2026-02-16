@@ -117,16 +117,20 @@ export const columnProcurement = ({
           <DropdownMenuContent align="end" className="space-y-1">
             <DropdownMenuLabel className="text-center">Opsi</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Button asChild size="icon" variant="ghost" className="w-full">
-                <Link
-                  href={ROUTES.AUTH.PROCUREMENT.UPDATE(dataRows.idProcurement)}
-                >
-                  <BadgeCheck className="h-4 w-4" />
-                  Verifikasi
-                </Link>
-              </Button>
-            </DropdownMenuItem>
+            {dataRows.status === "DRAFT" && (
+              <DropdownMenuItem asChild>
+                <Button asChild size="icon" variant="ghost" className="w-full">
+                  <Link
+                    href={ROUTES.AUTH.PROCUREMENT.UPDATE(
+                      dataRows.idProcurement,
+                    )}
+                  >
+                    <BadgeCheck className="h-4 w-4" />
+                    Verifikasi
+                  </Link>
+                </Button>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
               <DialogDelete value={dataRows} rawItems={rawItems} />
             </DropdownMenuItem>

@@ -28,6 +28,7 @@ export type TItem = {
 export type TItemSelect = {
   idItem: string;
   name: string;
+  minStock: string;
   currentStock: string;
   unitName: string | null;
 };

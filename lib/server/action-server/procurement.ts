@@ -29,15 +29,17 @@ import {
 } from "@/lib/db/schema";
 import { getPurchaseId } from "../data-server/purchase";
 import { getReceiptId } from "../data-server/receipt";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   templateProcurementApproved,
   templatePurchaseRequest,
 } from "@/lib/template-notif";
 import {
   invalidateItem,
+  invalidateItemMov,
   invalidateProcurement,
   invalidatePurchase,
+  invalidateReceipt,
 } from "../data-server/revalidate";
 import { generateTransactionID } from "../data-server/transaction";
 
@@ -270,8 +272,14 @@ export const verifPurchase = async (values: VerifyPurchaseValues) => {
 
       const newReceiptId = generateProcurementId("GR", lastReceiptId);
 
+      // 1. Verify purchase exists and status
       const purchase = await tx.query.purchaseTable.findFirst({
         where: eq(purchaseTable.idPurchase, validated.data.purchaseId),
+        columns: {
+          idPurchase: true,
+          status: true,
+          procurementId: true,
+        },
       });
 
       if (!purchase) {
@@ -280,16 +288,18 @@ export const verifPurchase = async (values: VerifyPurchaseValues) => {
 
       if (purchase.status !== "SENT") {
         throw new Error(
-          `Purchase ${validated.data.purchaseId} status bukan DELIVERED`,
+          `Purchase ${validated.data.purchaseId} status bukan SENT`,
         );
       }
 
+      // 2. Create goods receipt
       await tx.insert(goodsReceiptTable).values({
         idReceipt: newReceiptId,
         purchaseId: validated.data.purchaseId,
         receivedBy: currentUserId,
       });
 
+      // 3. Create transaction
       await tx.insert(transactionTable).values({
         idTransaction: lastTransactionId,
         type: "PURCHASE",
@@ -297,40 +307,68 @@ export const verifPurchase = async (values: VerifyPurchaseValues) => {
         userId: currentUserId,
       });
 
-      for (const item of validated.data.items) {
-        const qtyReceived = Number(item.qtyReceived);
+      // 4. Batch insert goods receipt items and item movements
+      const receiptItems = [];
+      const movements = [];
 
-        await tx.insert(goodsReceiptItemTable).values({
+      for (const item of validated.data.items) {
+        receiptItems.push({
           receiptId: newReceiptId,
           itemId: item.itemId,
           qtyReceived: item.qtyReceived,
           qtyDamaged: item.qtyDamaged,
         });
 
-        if (qtyReceived > 0) {
-          await tx.insert(itemMovementTable).values({
+        if (Number(item.qtyReceived) > 0) {
+          movements.push({
             transactionId: lastTransactionId,
             itemId: item.itemId,
-            type: "IN",
+            type: "IN" as const,
             quantity: item.qtyReceived,
           });
         }
       }
 
+      // 🔥 Batch insert (2 queries instead of N queries)
+      await Promise.all([
+        tx.insert(goodsReceiptItemTable).values(receiptItems),
+        movements.length > 0
+          ? tx.insert(itemMovementTable).values(movements)
+          : Promise.resolve(),
+      ]);
+
+      // 5. Update purchase status
       await tx
         .update(purchaseTable)
-        .set({
-          status: "COMPLETED",
-        })
+        .set({ status: "COMPLETED" })
         .where(eq(purchaseTable.idPurchase, validated.data.purchaseId));
 
-      // Create notification for procurement requester
-      // Notify that goods have been received and QC completed
+      // 🔥 6. Single query to check and update procurement (most efficient)
+      const [statusCheck] = await tx
+        .select({
+          total: sql<number>`COUNT(*)::int`,
+          completed: sql<number>`SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END)::int`,
+          cancelled: sql<number>`SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END)::int`,
+        })
+        .from(purchaseTable)
+        .where(eq(purchaseTable.procurementId, purchase.procurementId));
+
+      // Update procurement if all purchases done
+      if (statusCheck.total === statusCheck.completed + statusCheck.cancelled) {
+        const newStatus = statusCheck.completed > 0 ? "COMPLETED" : "CANCELLED";
+
+        await tx
+          .update(procurementTable)
+          .set({ status: newStatus })
+          .where(eq(procurementTable.idProcurement, purchase.procurementId));
+      }
     });
 
     invalidateItem();
+    invalidateItemMov();
     invalidateProcurement();
     invalidatePurchase();
+    invalidateReceipt();
 
     return {
       ok: true,

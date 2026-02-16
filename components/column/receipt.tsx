@@ -55,7 +55,7 @@ export const columnReceipt: ColumnDef<TReceipt>[] = [
   },
   {
     accessorKey: "purchaseId",
-    header: "No. PO",
+    header: "No. Pembelian",
     cell: ({ row }) => (
       <div className="text-sm text-muted-foreground">
         {row.getValue("purchaseId")}

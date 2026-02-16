@@ -1,6 +1,6 @@
 import z from "zod";
 
-const allowedRegex = /^[a-zA-Z0-9.,/ \-']+$/;
+const allowedRegex = /^[a-zA-Z0-9.,/() \-']+$/;
 
 const regexIdItem = /^BB-(RW|WP|FG)-\d{3}$/;
 const regexIdProcurement = /^(PR|PO|GR)-\d{4}$/;

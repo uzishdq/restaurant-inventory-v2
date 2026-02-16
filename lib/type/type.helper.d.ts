@@ -43,3 +43,5 @@ export type typeTransactionType =
 export type statusTransaction = "PENDING" | "COMPLETED" | "CANCELLED";
 
 export type typeMovement = "IN" | "OUT";
+
+export type stockStatus = "OUT_OF_STOCK" | "LOW_STOCK" | "SUFFICIENT";
