@@ -117,7 +117,7 @@ export const DeleteItemSchema = z.object({
 });
 
 export const TypeItemSchema = z.object({
-  type: z.enum([...enumTypeItem, "ALL"], {
+  type: z.enum([...enumTypeItem, "ALL", "PROCUREMENT"], {
     error: "Pilih tipe item",
   }),
 });

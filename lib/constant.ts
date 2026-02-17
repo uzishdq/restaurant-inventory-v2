@@ -36,7 +36,8 @@ export const ROUTES = {
     PROCUREMENT: {
       INDEX: "/procurement",
       CREATE: "/procurement/create",
-      UPDATE: (id: string) => `/procurement/update/${id}`,
+      VERIFY_PURCHASE: (id: string) => `/procurement/verify-purchase/${id}`,
+      VERIFY_PRODUCTION: (id: string) => `/procurement/verify-production/${id}`,
       DETAIL: (id: string) => `/procurement/detail/${id}`,
     },
     PURCHASE: {
@@ -47,6 +48,11 @@ export const ROUTES = {
     RECEIPT: {
       INDEX: "/receipt",
       DETAIL: (id: string) => `/receipt/detail/${id}`,
+    },
+    PRODUCTION: {
+      INDEX: "/procurement",
+      UPDATE: (id: string) => `/production/update/${id}`,
+      DETAIL: (id: string) => `/production/detail/${id}`,
     },
     REPORT: {
       TRANSACTION: "/report/transaction",
@@ -78,8 +84,12 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
     title: "Pengajuan Pengadaan Bahan Baku",
   },
   {
-    pattern: /^\/procurement\/update\/[^/]+$/,
+    pattern: /^\/procurement\/verify-purchase\/[^/]+$/,
     title: "Verifikasi Pengadaan Bahan Baku",
+  },
+  {
+    pattern: /^\/procurement\/verify-production\/[^/]+$/,
+    title: "Verifikasi Produksi Bahan Baku",
   },
   { pattern: /^\/procurement$/, title: "Pengadaan Bahan Baku" },
   {

@@ -49,6 +49,12 @@ export function invalidateReceipt() {
   revalidatePath(ROUTES.AUTH.RECEIPT.INDEX);
 }
 
+export function invalidateProduction() {
+  revalidateTag(CACHE_TAGS.transaction.production.list, { expire: 0 });
+  revalidateTag(CACHE_TAGS.transaction.production.detail, { expire: 0 });
+  revalidatePath(ROUTES.AUTH.PRODUCTION.INDEX);
+}
+
 export function invalidateItemMov() {
   revalidateTag(CACHE_TAGS.transaction.itemMov.list, { expire: 0 });
   revalidatePath(ROUTES.AUTH.TRANSACTION.MOVEMENT);

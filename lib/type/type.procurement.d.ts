@@ -1,9 +1,10 @@
-import { statusProcurement, statusPurchase } from "./type.helper";
+import { statusProcurement, statusPurchase, typeItems } from "./type.helper";
 
 export type TProcerementItem = {
   idProcurementItem: string;
   itemId: string;
   itemName: string;
+  itemType: typeItems;
   categoryName: string;
   unitName: string;
   qtyRequested: string;
@@ -16,6 +17,9 @@ export type TProcerement = {
   status: statusProcurement;
   createdAt: Date;
   procurementItem: TProcerementItem[];
+  totalItems: number;
+  totalRawMaterial: number;
+  totalWorkInProgress: number;
 };
 
 export type TPurchase = {

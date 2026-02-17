@@ -39,6 +39,7 @@ export const getProcerumentList = unstable_cache(
           idProcurementItem: procurementItemTable.idProcurementItem,
           itemId: procurementItemTable.itemId,
           itemName: itemTable.name,
+          itemType: itemTable.type,
           categoryName: categoryTable.name,
           unitName: unitTable.name,
           qtyRequested: procurementItemTable.qtyRequested,
@@ -68,6 +69,9 @@ export const getProcerumentList = unstable_cache(
             status: row.status,
             createdAt: row.createdAt,
             procurementItem: [],
+            totalItems: 0,
+            totalRawMaterial: 0,
+            totalWorkInProgress: 0,
           };
         }
 
@@ -76,11 +80,19 @@ export const getProcerumentList = unstable_cache(
             idProcurementItem: row.idProcurementItem,
             itemId: row.itemId ?? "-",
             itemName: row.itemName ?? "-",
+            itemType: row.itemType ?? "RAW_MATERIAL",
             categoryName: row.categoryName ?? "-",
             unitName: row.unitName ?? "-",
             qtyRequested: row.qtyRequested ?? "-",
             notes: row.notes ?? "-",
           });
+          acc[row.idProcurement].totalItems += 1;
+
+          if (row.itemType === "RAW_MATERIAL") {
+            acc[row.idProcurement].totalRawMaterial += 1;
+          } else if (row.itemType === "WORK_IN_PROGRESS") {
+            acc[row.idProcurement].totalWorkInProgress += 1;
+          }
         }
 
         return acc;
@@ -118,8 +130,14 @@ export const getProcerumentById = unstable_cache(
         eq(procurementTable.idProcurement, parsed.data.id),
       ];
 
+      // Filter by procurement status
       if (parsed.data.status !== "ALL") {
         whereConditions.push(eq(procurementTable.status, parsed.data.status));
+      }
+
+      // Filter by item type ← TAMBAHKAN INI
+      if (parsed.data.itemType && parsed.data.itemType !== "ALL") {
+        whereConditions.push(eq(itemTable.type, parsed.data.itemType));
       }
 
       const rows = await db
@@ -131,6 +149,7 @@ export const getProcerumentById = unstable_cache(
           idProcurementItem: procurementItemTable.idProcurementItem,
           itemId: procurementItemTable.itemId,
           itemName: itemTable.name,
+          itemType: itemTable.type,
           categoryName: categoryTable.name,
           unitName: unitTable.name,
           qtyRequested: procurementItemTable.qtyRequested,
@@ -161,6 +180,9 @@ export const getProcerumentById = unstable_cache(
             status: row.status,
             createdAt: row.createdAt,
             procurementItem: [],
+            totalItems: 0,
+            totalRawMaterial: 0,
+            totalWorkInProgress: 0,
           };
         }
 
@@ -169,11 +191,20 @@ export const getProcerumentById = unstable_cache(
             idProcurementItem: row.idProcurementItem,
             itemId: row.itemId ?? "-",
             itemName: row.itemName ?? "-",
+            itemType: row.itemType ?? "RAW_MATERIAL",
             categoryName: row.categoryName ?? "-",
             unitName: row.unitName ?? "-",
             qtyRequested: row.qtyRequested ?? "-",
             notes: row.notes ?? "-",
           });
+
+          acc[row.idProcurement].totalItems += 1;
+
+          if (row.itemType === "RAW_MATERIAL") {
+            acc[row.idProcurement].totalRawMaterial += 1;
+          } else if (row.itemType === "WORK_IN_PROGRESS") {
+            acc[row.idProcurement].totalWorkInProgress += 1;
+          }
         }
 
         return acc;

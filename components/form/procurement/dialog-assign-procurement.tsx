@@ -148,8 +148,8 @@ export function DialogAssignItems({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button type="button" size="sm" variant="outline">
-          <Plus className="mr-2 h-4 w-4" />
-          Bahan Baku
+          <Plus className="h-4 w-4" />
+          Tambah
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
@@ -203,10 +203,10 @@ export function DialogAssignItems({
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-12 text-center">
             <Package className="mb-3 h-12 w-12 text-muted-foreground/50" />
             <p className="mb-1 text-sm font-medium text-muted-foreground">
-              Tidak ada item tersedia
+              Tidak ada bahan baku tersedia
             </p>
             <p className="text-xs text-muted-foreground">
-              Semua item sudah diassign ke supplier lain
+              Semua bahan baku sudah diassign ke supplier lain
             </p>
           </div>
         )}

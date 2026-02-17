@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   enumStatusProcurement,
   enumStatusPurchase,
+  enumTypeItem,
   IdItemSchema,
   IdProcurementSchema,
   optionalStringSchema,
@@ -51,6 +52,7 @@ export const procurementByIdSchema = z.object({
   status: z.enum([...enumStatusProcurement, "ALL"], {
     error: "Status Pengadaan Tidak sesuai",
   }),
+  itemType: z.enum([...enumTypeItem, "ALL"]).optional(),
 });
 
 // Purchase Schema

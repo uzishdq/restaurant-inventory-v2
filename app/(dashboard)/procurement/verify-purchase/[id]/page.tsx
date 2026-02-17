@@ -5,9 +5,8 @@ import { LABEL } from "@/lib/constant";
 import { isProcurementId } from "@/lib/helper";
 import { getProcerumentById } from "@/lib/server/data-server/procurement";
 import { getSupplierList } from "@/lib/server/data-server/supplier";
-import React from "react";
 
-export default async function UpdateProcurementPage({
+export default async function VerifyPurchaseProcurementPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -19,7 +18,7 @@ export default async function UpdateProcurementPage({
   }
 
   const [procurement, suppliers] = await Promise.all([
-    getProcerumentById({ id: id, status: "DRAFT" }),
+    getProcerumentById({ id: id, status: "DRAFT", itemType: "RAW_MATERIAL" }),
     getSupplierList(),
   ]);
 

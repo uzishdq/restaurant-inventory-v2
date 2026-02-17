@@ -15,7 +15,7 @@ import {
 import { typeGetItem, typeItems } from "@/lib/type/type.helper";
 import { TItem, TItemMovement, TItemSelect } from "@/lib/type/type.item";
 import { TypeItemSchema } from "@/lib/validation/master-validation";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { unstable_cache } from "next/cache";
 
@@ -174,6 +174,7 @@ export const getSelectItem = unstable_cache(
         return { ok: false, data: null };
       }
 
+      // Get stock summary
       const movementSummary = await db
         .select({
           itemId: itemMovementTable.itemId,
@@ -196,24 +197,81 @@ export const getSelectItem = unstable_cache(
         movementSummary.map((m) => [m.itemId, m.currentStock]),
       );
 
-      const Items = await db
+      // Build WHERE condition
+      let whereCondition;
+      if (type === "ALL") {
+        whereCondition = undefined;
+      } else if (type === "PROCUREMENT") {
+        whereCondition = inArray(itemTable.type, [
+          "RAW_MATERIAL",
+          "WORK_IN_PROGRESS",
+        ]);
+      } else {
+        whereCondition = eq(itemTable.type, type);
+      }
+
+      // Get items with BOM details (joined)
+      const rawResult = await db
         .select({
+          // Item fields
           idItem: itemTable.idItem,
           name: itemTable.name,
           minStock: itemTable.minStock,
+          type: itemTable.type,
           unitName: unitTable.name,
+          // BOM fields (will be null for RAW_MATERIAL)
+          bomDetailId: itemBomDetailTable.idBomDetail,
+          rawItemId: itemBomDetailTable.rawItemId,
+          rawItemName: sql<string>`raw_item.name`.as("raw_item_name"),
+          rawUnitName: sql<string | null>`raw_unit.name`.as("raw_unit_name"),
+          qty: itemBomDetailTable.qty,
         })
         .from(itemTable)
         .leftJoin(unitTable, eq(itemTable.unitId, unitTable.idUnit))
-        .where(type === "ALL" ? undefined : eq(itemTable.type, type));
+        .leftJoin(itemBomTable, eq(itemTable.idItem, itemBomTable.itemId))
+        .leftJoin(
+          itemBomDetailTable,
+          eq(itemBomTable.idBom, itemBomDetailTable.bomId),
+        )
+        .leftJoin(
+          alias(itemTable, "raw_item"),
+          eq(itemBomDetailTable.rawItemId, sql`raw_item.id_item`),
+        )
+        .leftJoin(
+          alias(unitTable, "raw_unit"),
+          eq(sql`raw_item.unit_id`, sql`raw_unit.id_unit`),
+        )
+        .where(whereCondition);
 
-      const result: TItemSelect[] = Items.map((item) => ({
-        idItem: item.idItem,
-        name: item.name,
-        unitName: item.unitName,
-        minStock: item.minStock,
-        currentStock: stockMap.get(item.idItem) || "0",
-      }));
+      // Group by item and collect BOM details
+      const itemMap = new Map<string, TItemSelect>();
+
+      rawResult.forEach((row) => {
+        if (!itemMap.has(row.idItem)) {
+          itemMap.set(row.idItem, {
+            idItem: row.idItem,
+            name: row.name,
+            unitName: row.unitName,
+            minStock: row.minStock,
+            type: row.type,
+            currentStock: stockMap.get(row.idItem) || "0",
+            bomDetails: [],
+          });
+        }
+
+        // Add BOM detail if exists
+        if (row.bomDetailId && row.rawItemId) {
+          itemMap.get(row.idItem)!.bomDetails.push({
+            rawItemId: row.rawItemId,
+            rawItemName: row.rawItemName,
+            qty: row.qty || "0",
+            currentStock: stockMap.get(row.rawItemId) || "0",
+            unitName: row.rawUnitName,
+          });
+        }
+      });
+
+      const result: TItemSelect[] = Array.from(itemMap.values());
 
       if (result.length > 0) {
         return { ok: true, data: result };

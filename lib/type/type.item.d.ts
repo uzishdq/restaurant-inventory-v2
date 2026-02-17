@@ -28,9 +28,17 @@ export type TItem = {
 export type TItemSelect = {
   idItem: string;
   name: string;
-  minStock: string;
-  currentStock: string;
   unitName: string | null;
+  minStock: string;
+  type: typeItems;
+  currentStock: string;
+  bomDetails: Array<{
+    rawItemId: string;
+    rawItemName: string;
+    qty: string;
+    currentStock: string;
+    unitName: string | null;
+  }>;
 };
 
 export type TItemMovement = {

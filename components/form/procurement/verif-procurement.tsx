@@ -267,7 +267,7 @@ const SupplierGroupCard = React.memo<SupplierGroupCardProps>(
 
         if (successCount > 0) {
           toast.success(
-            `${successCount} item berhasil ditambahkan ke ${selectedSupplier?.store ?? "supplier"}`,
+            `${successCount} bahan baku berhasil ditambahkan ke ${selectedSupplier?.store ?? "supplier"}`,
           );
         }
       },
@@ -315,7 +315,7 @@ const SupplierGroupCard = React.memo<SupplierGroupCardProps>(
                 onClick={onRemove}
                 className="shrink-0 self-start"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 Hapus
               </Button>
             </div>
@@ -366,10 +366,10 @@ const SupplierGroupCard = React.memo<SupplierGroupCardProps>(
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-8 text-center">
                   <ShoppingCart className="mb-3 h-8 w-8 text-muted-foreground/50" />
                   <p className="mb-1 text-sm font-medium text-muted-foreground">
-                    Belum ada item
+                    Belum ada bahan baku
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Klik tombol Assign Item untuk menambahkan
+                    Klik tombol Tambah untuk menambahkan bahan baku
                   </p>
                 </div>
               ) : (
@@ -429,6 +429,17 @@ export default function ProcurementApprovalForm({
     control: form.control,
     name: "assignments",
   });
+
+  const handleAddSupplier = useCallback(() => {
+    append({
+      supplierId: "",
+      items: [],
+    });
+
+    toast.info("Supplier ditambahkan", {
+      description: "Pilih supplier dan tambahkan bahan baku yang akan dipesan",
+    });
+  }, [append]);
 
   const watchedAssignments = useWatch({
     control: form.control,
@@ -500,14 +511,9 @@ export default function ProcurementApprovalForm({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() =>
-                append({
-                  supplierId: "",
-                  items: [],
-                })
-              }
+              onClick={handleAddSupplier}
             >
-              <Store className="mr-2 h-4 w-4" />
+              <Store className="h-4 w-4" />
               Tambah Supplier
             </Button>
           )}
@@ -598,7 +604,7 @@ export default function ProcurementApprovalForm({
         <FieldGroup>
           {fields.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-12 text-center">
-              <Store className="mb-4 h-12 w-12 text-muted-foreground" />
+              <Store className="mb-4 h-12 w-12 text-muted-foreground/50" />
               <p className="mb-2 text-sm font-medium text-muted-foreground">
                 Belum ada supplier
               </p>
@@ -609,14 +615,9 @@ export default function ProcurementApprovalForm({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  append({
-                    supplierId: "",
-                    items: [],
-                  })
-                }
+                onClick={handleAddSupplier}
               >
-                <Store className="mr-2 h-4 w-4" />
+                <Store className="h-4 w-4" />
                 Tambah Supplier
               </Button>
             </div>

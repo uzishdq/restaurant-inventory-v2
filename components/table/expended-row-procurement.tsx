@@ -1,5 +1,6 @@
 import { TProcerementItem } from "@/lib/type/type.procurement";
 import { Badge } from "../ui/badge";
+import { BadgeCustom } from "../column/badge-custom";
 
 interface ExpandedRowProcurementProps {
   detailItem: TProcerementItem[];
@@ -18,23 +19,33 @@ export default function ExpandedRowProcurement({
         {detailItem.map((item) => (
           <div
             key={item.idProcurementItem}
-            className="rounded-md border bg-card p-4"
+            className="rounded-md border bg-card p-4 space-y-2"
           >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{item.itemName}</span>
-              <Badge variant="outline" className="ml-2">
-                {item.qtyRequested} {item.unitName}
-              </Badge>
+            {/* Header with item name and type badge */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <span className="font-medium block">{item.itemName}</span>
+                {item.categoryName && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {item.categoryName}
+                  </p>
+                )}
+              </div>
+              <BadgeCustom
+                value={item.itemType}
+                category="typeItem"
+                className="shrink-0"
+              />
             </div>
 
-            {item.categoryName && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {item.categoryName}
-              </p>
-            )}
+            {/* Quantity badge */}
+            <Badge variant="outline" className="font-mono">
+              {item.qtyRequested} {item.unitName}
+            </Badge>
 
-            {item.notes && (
-              <p className="mt-2 text-xs italic text-muted-foreground">
+            {/* Notes */}
+            {item.notes && item.notes !== "-" && (
+              <p className="text-xs italic text-muted-foreground border-t pt-2">
                 {item.notes}
               </p>
             )}

@@ -15,7 +15,11 @@ import {
   BadgeCheck,
   ChevronDown,
   ChevronRight,
+  CookingPot,
+  Factory,
   MoreHorizontal,
+  Package,
+  ShoppingCart,
 } from "lucide-react";
 import DialogForm from "../form/dialog-form";
 import { TItemSelect } from "@/lib/type/type.item";
@@ -24,6 +28,7 @@ import { formatDateWIB } from "@/lib/helper";
 import { TProcerement } from "@/lib/type/type.procurement";
 import { ROUTES } from "@/lib/constant";
 import Link from "next/link";
+import { Badge } from "../ui/badge";
 
 export const columnProcurement = ({
   rawItems,
@@ -90,6 +95,49 @@ export const columnProcurement = ({
     },
   },
   {
+    accessorKey: "totalItems",
+    header: "Total Pengadaan",
+    enableHiding: true,
+    cell: ({ row }) => {
+      const totalRaw = row.original.totalRawMaterial;
+      const totalWip = row.original.totalWorkInProgress;
+
+      return (
+        <div className="space-y-1.5">
+          {/* Total */}
+          <div className="flex items-center gap-1.5">
+            <Package className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="font-semibold">{row.getValue("totalItems")}</span>
+            <span className="text-xs text-muted-foreground">bahan</span>
+          </div>
+
+          {/* Breakdown */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {totalRaw > 0 && (
+              <Badge
+                variant="secondary"
+                className="text-xs gap-1 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
+              >
+                <ShoppingCart className="h-3 w-3" />
+                {totalRaw}
+              </Badge>
+            )}
+
+            {totalWip > 0 && (
+              <Badge
+                variant="secondary"
+                className="text-xs gap-1 bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
+              >
+                <Factory className="h-3 w-3" />
+                {totalWip}
+              </Badge>
+            )}
+          </div>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "status",
     header: "Status",
     enableHiding: true,
@@ -117,20 +165,40 @@ export const columnProcurement = ({
           <DropdownMenuContent align="end" className="space-y-1">
             <DropdownMenuLabel className="text-center">Opsi</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {dataRows.status === "DRAFT" && (
+            {dataRows.status === "DRAFT" && dataRows.totalRawMaterial > 0 && (
               <DropdownMenuItem asChild>
                 <Button asChild size="icon" variant="ghost" className="w-full">
                   <Link
-                    href={ROUTES.AUTH.PROCUREMENT.UPDATE(
+                    href={ROUTES.AUTH.PROCUREMENT.VERIFY_PURCHASE(
                       dataRows.idProcurement,
                     )}
                   >
                     <BadgeCheck className="h-4 w-4" />
-                    Verifikasi
+                    Verifikasi Pembelian
                   </Link>
                 </Button>
               </DropdownMenuItem>
             )}
+            {dataRows.status === "DRAFT" &&
+              dataRows.totalWorkInProgress > 0 && (
+                <DropdownMenuItem asChild>
+                  <Button
+                    asChild
+                    size="icon"
+                    variant="ghost"
+                    className="w-full"
+                  >
+                    <Link
+                      href={ROUTES.AUTH.PROCUREMENT.VERIFY_PRODUCTION(
+                        dataRows.idProcurement,
+                      )}
+                    >
+                      <CookingPot className="h-4 w-4" />
+                      Verifikasi Produksi
+                    </Link>
+                  </Button>
+                </DropdownMenuItem>
+              )}
             <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
               <DialogDelete value={dataRows} rawItems={rawItems} />
             </DropdownMenuItem>

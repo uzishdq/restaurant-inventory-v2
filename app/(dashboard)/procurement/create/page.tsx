@@ -7,7 +7,7 @@ import { getSupplierList } from "@/lib/server/data-server/supplier";
 
 export default async function CreateProcurementPage() {
   const [items, suppliers] = await Promise.all([
-    getSelectItem("RAW_MATERIAL"),
+    getSelectItem("PROCUREMENT"),
     getSupplierList(),
   ]);
 

@@ -21,6 +21,7 @@ import {
   notificationsTable,
   procurementItemTable,
   procurementTable,
+  productionOrderTable,
   purchaseItemTable,
   purchaseTable,
   supplierTable,
@@ -29,7 +30,7 @@ import {
 } from "@/lib/db/schema";
 import { getPurchaseId } from "../data-server/purchase";
 import { getReceiptId } from "../data-server/receipt";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   templateProcurementApproved,
   templatePurchaseRequest,
@@ -38,10 +39,12 @@ import {
   invalidateItem,
   invalidateItemMov,
   invalidateProcurement,
+  invalidateProduction,
   invalidatePurchase,
   invalidateReceipt,
 } from "../data-server/revalidate";
 import { generateTransactionID } from "../data-server/transaction";
+import { AllStatus, statusProcurement } from "@/lib/type/type.helper";
 
 export const createProcurement = async (values: CreateProcurementValues) => {
   try {
@@ -77,6 +80,7 @@ export const createProcurement = async (values: CreateProcurementValues) => {
     });
 
     invalidateProcurement();
+    invalidateProduction();
 
     return {
       ok: true,
@@ -90,6 +94,67 @@ export const createProcurement = async (values: CreateProcurementValues) => {
     };
   }
 };
+
+export async function updateProcurementStatus(
+  tx: typeof db,
+  procurementId: string,
+): Promise<statusProcurement | null> {
+  // Get all purchases and production orders in one query
+  const rows = await tx
+    .select({
+      purchaseStatus: purchaseTable.status,
+      productionStatus: productionOrderTable.status,
+    })
+    .from(procurementTable)
+    .leftJoin(
+      purchaseTable,
+      eq(procurementTable.idProcurement, purchaseTable.procurementId),
+    )
+    .leftJoin(
+      productionOrderTable,
+      eq(procurementTable.idProcurement, productionOrderTable.procurementId),
+    )
+    .where(eq(procurementTable.idProcurement, procurementId));
+
+  // Collect unique statuses
+  const allStatuses: Array<AllStatus> = [];
+
+  rows.forEach((row) => {
+    if (row.purchaseStatus) {
+      allStatuses.push(row.purchaseStatus);
+    }
+    if (row.productionStatus) {
+      allStatuses.push(row.productionStatus);
+    }
+  });
+
+  // No orders = no update
+  if (allStatuses.length === 0) {
+    return null;
+  }
+
+  // Check if all orders are done
+  const allDone = allStatuses.every(
+    (status) => status === "COMPLETED" || status === "CANCELLED",
+  );
+
+  if (!allDone) {
+    return null;
+  }
+
+  // Check if at least one is completed (use .includes() instead of .some())
+  const hasCompleted = allStatuses.includes("COMPLETED");
+
+  const newStatus: statusProcurement = hasCompleted ? "COMPLETED" : "CANCELLED";
+
+  // Update procurement
+  await tx
+    .update(procurementTable)
+    .set({ status: newStatus })
+    .where(eq(procurementTable.idProcurement, procurementId));
+
+  return newStatus;
+}
 
 export const verifProcurement = async (values: VerifyProcurementValues) => {
   try {
@@ -342,26 +407,6 @@ export const verifPurchase = async (values: VerifyPurchaseValues) => {
         .update(purchaseTable)
         .set({ status: "COMPLETED" })
         .where(eq(purchaseTable.idPurchase, validated.data.purchaseId));
-
-      // 🔥 6. Single query to check and update procurement (most efficient)
-      const [statusCheck] = await tx
-        .select({
-          total: sql<number>`COUNT(*)::int`,
-          completed: sql<number>`SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END)::int`,
-          cancelled: sql<number>`SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END)::int`,
-        })
-        .from(purchaseTable)
-        .where(eq(purchaseTable.procurementId, purchase.procurementId));
-
-      // Update procurement if all purchases done
-      if (statusCheck.total === statusCheck.completed + statusCheck.cancelled) {
-        const newStatus = statusCheck.completed > 0 ? "COMPLETED" : "CANCELLED";
-
-        await tx
-          .update(procurementTable)
-          .set({ status: newStatus })
-          .where(eq(procurementTable.idProcurement, purchase.procurementId));
-      }
     });
 
     invalidateItem();

@@ -19,7 +19,7 @@ export type RoleGroup =
 
 export type typeItems = "RAW_MATERIAL" | "WORK_IN_PROGRESS" | "FINISHED_GOOD";
 
-type typeGetItem = typeItems | "ALL";
+type typeGetItem = typeItems | "ALL" | "PROCUREMENT";
 
 export type statusProcurement =
   | "DRAFT"
@@ -33,6 +33,15 @@ export type statusPurchase =
   | "RECEIVED"
   | "COMPLETED"
   | "CANCELLED";
+
+export type statusProduction =
+  | "DRAFT"
+  | "SCHEDULED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export type AllStatus = statusPurchase | statusProduction;
 
 export type typeTransactionType =
   | "PURCHASE"

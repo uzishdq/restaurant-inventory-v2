@@ -16,7 +16,14 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, AlertCircle, Package } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Plus,
+  Trash2,
+  AlertCircle,
+  AlertTriangle,
+  Package,
+} from "lucide-react";
 import type { TItemSelect } from "@/lib/type/type.item";
 import {
   createProcurementSchema,
@@ -26,6 +33,7 @@ import { createProcurement } from "@/lib/server/action-server/procurement";
 import { CustomSelect } from "../custom-select";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/constant";
+import { BadgeCustom } from "@/components/column/badge-custom";
 
 interface IProcurementForm {
   items: TItemSelect[];
@@ -37,6 +45,120 @@ interface ProcurementItemRowProps {
   items: TItemSelect[];
   selectedItemIds: string[];
   onRemove: () => void;
+}
+
+interface StockStatus {
+  type: "out_of_stock" | "low_stock" | "sufficient";
+  showAlert: boolean;
+  alertVariant: "destructive" | "warning";
+  alertIcon: typeof AlertCircle | typeof AlertTriangle;
+  alertMessage: string;
+  textColor: string;
+}
+
+interface BomCheckResult {
+  canProduce: boolean;
+  missingMaterials: Array<{
+    itemId: string;
+    itemName: string;
+    required: number;
+    current: number;
+    deficit: number;
+    unitName: string;
+  }>;
+}
+
+function calculateStockStatus(
+  currentStock: string,
+  minStock: string,
+  unitName: string | null,
+): StockStatus {
+  const current = Number.parseFloat(currentStock || "0");
+  const min = Number.parseFloat(minStock || "0");
+  const unit = unitName || "unit";
+
+  if (current === 0) {
+    return {
+      type: "out_of_stock",
+      showAlert: true,
+      alertVariant: "destructive",
+      alertIcon: AlertCircle,
+      alertMessage:
+        "Stok bahan baku ini kosong. Pastikan jumlah pesanan sudah sesuai kebutuhan.",
+      textColor: "text-destructive",
+    };
+  }
+
+  if (current < min) {
+    const needed = (min - current).toFixed(2);
+    return {
+      type: "low_stock",
+      showAlert: true,
+      alertVariant: "warning",
+      alertIcon: AlertTriangle,
+      alertMessage: `Stok bahan baku ini rendah (${current}/${min} ${unit}). Disarankan memesan minimal ${needed} ${unit}.`,
+      textColor: "text-yellow-600",
+    };
+  }
+
+  return {
+    type: "sufficient",
+    showAlert: false,
+    alertVariant: "destructive",
+    alertIcon: AlertCircle,
+    alertMessage: "",
+    textColor: "text-foreground",
+  };
+}
+
+function checkBomMaterials(
+  selectedItem: TItemSelect,
+  qtyRequested: string,
+): BomCheckResult | null {
+  // Only check for WIP/FG
+  if (
+    selectedItem.type !== "WORK_IN_PROGRESS" &&
+    selectedItem.type !== "FINISHED_GOOD"
+  ) {
+    return null;
+  }
+
+  const bomDetails = selectedItem.bomDetails;
+
+  if (bomDetails.length === 0) {
+    return {
+      canProduce: false,
+      missingMaterials: [],
+    };
+  }
+
+  const qty = Number.parseFloat(qtyRequested || "0");
+  if (qty === 0) return null;
+
+  const missingMaterials = bomDetails
+    .map((bom) => {
+      const requiredPerUnit = Number.parseFloat(bom.qty);
+      const totalRequired = requiredPerUnit * qty;
+      const current = Number.parseFloat(bom.currentStock);
+      const deficit = Math.max(0, totalRequired - current);
+
+      if (deficit === 0) return null;
+
+      return {
+        itemId: bom.rawItemId,
+        itemName: bom.rawItemName,
+        required: totalRequired,
+        current,
+        deficit,
+        unitName: bom.unitName || "unit",
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  return {
+    canProduce: missingMaterials.length === 0,
+    missingMaterials,
+  };
 }
 
 function ProcurementItemRow({
@@ -55,6 +177,11 @@ function ProcurementItemRow({
     name: `items.${idx}.itemId`,
   });
 
+  const qtyRequested = useWatch({
+    control,
+    name: `items.${idx}.qtyRequested`,
+  });
+
   const itemMap = useMemo(
     () => new Map(items.map((i) => [i.idItem, i])),
     [items],
@@ -70,10 +197,23 @@ function ProcurementItemRow({
     );
   }, [items, selectedItemIds, selectedItemId]);
 
-  const isLowStock =
-    selectedItem && Number.parseFloat(selectedItem.currentStock || "0") === 0;
+  const stockStatus = useMemo(() => {
+    if (!selectedItem) return null;
+    return calculateStockStatus(
+      selectedItem.currentStock,
+      selectedItem.minStock,
+      selectedItem.unitName,
+    );
+  }, [selectedItem]);
+
+  // BOM Check
+  const bomCheck = useMemo(() => {
+    if (!selectedItem || !qtyRequested) return null;
+    return checkBomMaterials(selectedItem, qtyRequested);
+  }, [selectedItem, qtyRequested]);
 
   const fieldError = errors.items?.[idx];
+  const AlertIcon = stockStatus?.alertIcon;
 
   return (
     <div className="group relative rounded-lg border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-sm">
@@ -89,26 +229,32 @@ function ProcurementItemRow({
                   items={availableItems}
                   valueField="idItem"
                   labelField="name"
-                  label="Bahan Baku"
-                  placeholder="Pilih Bahan Baku"
+                  label="Bahan Baku / Item"
+                  placeholder="Pilih Item"
                   field={field}
                   fieldState={fieldState}
                 />
                 {selectedItem && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <Package className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      Stok saat ini:{" "}
-                      <span
-                        className={cn(
-                          "font-medium",
-                          isLowStock ? "text-destructive" : "text-foreground",
-                        )}
-                      >
-                        {selectedItem.currentStock || "0"}{" "}
-                        {selectedItem.unitName || "unit"}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Type Badge */}
+                    <BadgeCustom
+                      value={selectedItem.type}
+                      category="typeItem"
+                    />
+
+                    {/* Stock Info */}
+                    <div className="flex items-center gap-1 text-xs">
+                      <Package className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">
+                        Stok:{" "}
+                        <span
+                          className={cn("font-medium", stockStatus?.textColor)}
+                        >
+                          {selectedItem.currentStock} / {selectedItem.minStock}{" "}
+                          {selectedItem.unitName || "unit"}
+                        </span>
                       </span>
-                    </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -130,7 +276,15 @@ function ProcurementItemRow({
                   step="0.01"
                   min="0.01"
                   aria-invalid={fieldState.invalid}
-                  placeholder="0.00"
+                  placeholder={
+                    stockStatus &&
+                    stockStatus.type !== "sufficient" &&
+                    selectedItem
+                      ? Number.parseFloat(selectedItem.minStock || "0").toFixed(
+                          2,
+                        )
+                      : "0.00"
+                  }
                   className="font-mono"
                 />
                 <FieldError
@@ -161,15 +315,56 @@ function ProcurementItemRow({
           )}
         />
 
-        {/* Low Stock Alert */}
-        {isLowStock && (
-          <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-            <p>
-              Stok bahan baku ini habis. Pastikan jumlah pesanan sudah sesuai
-              kebutuhan.
-            </p>
-          </div>
+        {/* BOM Materials Warning */}
+        {bomCheck && bomCheck.missingMaterials.length > 0 && (
+          <Alert
+            variant="default"
+            className="border-orange-600 bg-orange-50 dark:bg-orange-900/10"
+          >
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800 dark:text-orange-500">
+              <p className="font-medium mb-1">
+                Bahan baku tidak mencukupi untuk {selectedItem?.name}
+              </p>
+              <ul className="space-y-1 text-xs">
+                {bomCheck.missingMaterials.map((material) => (
+                  <li
+                    key={material.itemId}
+                    className="flex items-center justify-between gap-2"
+                  >
+                    <span className="font-medium">{material.itemName}:</span>
+                    <span className="text-right">
+                      Kurang{" "}
+                      <span className="font-bold text-orange-700">
+                        {material.deficit.toFixed(2)} {material.unitName}
+                      </span>
+                      <span className="text-muted-foreground ml-1">
+                        ({material.current.toFixed(2)}/
+                        {material.required.toFixed(2)})
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-xs font-medium">
+                Tambahkan bahan baku yang kurang ke dalam pengajuan ini
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Stock Status Alert */}
+        {stockStatus?.showAlert && AlertIcon && (
+          <Alert
+            variant={stockStatus.alertVariant}
+            className={cn(
+              stockStatus.alertVariant === "warning" &&
+                "border-yellow-600 text-yellow-800 dark:text-yellow-500 [&>svg]:text-yellow-600",
+            )}
+          >
+            <AlertIcon className="h-4 w-4" />
+            <AlertDescription>{stockStatus.alertMessage}</AlertDescription>
+          </Alert>
         )}
 
         {/* Error Message */}
@@ -185,7 +380,7 @@ function ProcurementItemRow({
         type="button"
         variant="destructive"
         size="icon"
-        className="absolute -right-2 -top-2 h-10 w-10 rounded-full border"
+        className="absolute -right-2 -top-2 h-10 w-10 rounded-full border shadow-sm"
         onClick={onRemove}
         aria-label="Hapus item"
       >
@@ -228,8 +423,6 @@ export default function ProcurementForm({
     return items.filter((item) => {
       const currentStock = Number.parseFloat(item.currentStock || "0");
       const minStock = Number.parseFloat(item.minStock || "0");
-
-      // Include items that are out of stock OR below minimum
       return currentStock === 0 || currentStock < minStock;
     });
   }, [items]);
@@ -250,7 +443,6 @@ export default function ProcurementForm({
         const currentStock = Number.parseFloat(item.currentStock || "0");
         const minStock = Number.parseFloat(item.minStock || "0");
 
-        // Calculate suggested quantity (difference to reach min stock)
         const suggestedQty =
           currentStock === 0
             ? minStock.toString()
@@ -267,15 +459,13 @@ export default function ProcurementForm({
       });
 
     if (lowStockItemsToAdd.length === 0) {
-      toast.info(
-        "Semua bahan baku dengan stok rendah/kosong sudah ditambahkan",
-      );
+      toast.info("Semua item dengan stok rendah/kosong sudah ditambahkan");
       return;
     }
 
     form.setValue("items", [...formItems, ...lowStockItemsToAdd]);
     toast.success(
-      `${lowStockItemsToAdd.length} bahan baku dengan stok rendah/kosong ditambahkan`,
+      `${lowStockItemsToAdd.length} item dengan stok rendah/kosong ditambahkan`,
     );
   }, [lowStockItems, selectedItemIds, form, formItems]);
 
@@ -304,6 +494,30 @@ export default function ProcurementForm({
     (item) => !selectedItemIds.includes(item.idItem),
   ).length;
 
+  // Statistics
+  const stats = useMemo(() => {
+    const outOfStock = formItems.filter((item) => {
+      const selected = items.find((i) => i.idItem === item.itemId);
+      return selected && Number.parseFloat(selected.currentStock || "0") === 0;
+    }).length;
+
+    const rawMaterial = formItems.filter((item) => {
+      const selected = items.find((i) => i.idItem === item.itemId);
+      return selected?.type === "RAW_MATERIAL";
+    }).length;
+
+    const production = formItems.filter((item) => {
+      const selected = items.find((i) => i.idItem === item.itemId);
+      return (
+        selected &&
+        (selected.type === "WORK_IN_PROGRESS" ||
+          selected.type === "FINISHED_GOOD")
+      );
+    }).length;
+
+    return { outOfStock, rawMaterial, production };
+  }, [formItems, items]);
+
   return (
     <FormProvider {...form}>
       <form
@@ -312,11 +526,11 @@ export default function ProcurementForm({
       >
         {/* Header Section */}
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row  items-center justify-center sm:justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3">
             <div className="text-center sm:text-left">
               <h3 className="text-lg font-semibold">Pengadaan Bahan Baku</h3>
               <p className="text-sm text-muted-foreground">
-                Tambahkan bahan baku yang akan dipesan
+                Tambahkan item yang akan dipesan atau diproduksi
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -348,25 +562,27 @@ export default function ProcurementForm({
 
           {/* Summary Stats */}
           {formItems.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Total Pengajuan</p>
+                <p className="text-xs text-muted-foreground">Total</p>
                 <p className="text-2xl font-semibold">{formItems.length}</p>
+              </div>
+              <div className="rounded-lg border bg-orange-50 dark:bg-orange-900/10 p-3">
+                <p className="text-xs text-muted-foreground">Pembelian</p>
+                <p className="text-2xl font-semibold text-orange-600">
+                  {stats.rawMaterial}
+                </p>
+              </div>
+              <div className="rounded-lg border bg-purple-50 dark:bg-purple-900/10 p-3">
+                <p className="text-xs text-muted-foreground">Produksi</p>
+                <p className="text-2xl font-semibold text-purple-600">
+                  {stats.production}
+                </p>
               </div>
               <div className="rounded-lg border bg-destructive/10 p-3">
                 <p className="text-xs text-muted-foreground">Stok Habis</p>
                 <p className="text-2xl font-semibold text-destructive">
-                  {
-                    formItems.filter((item) => {
-                      const selected = items.find(
-                        (i) => i.idItem === item.itemId,
-                      );
-                      return (
-                        selected &&
-                        Number.parseFloat(selected.currentStock || "0") === 0
-                      );
-                    }).length
-                  }
+                  {stats.outOfStock}
                 </p>
               </div>
             </div>
@@ -382,7 +598,7 @@ export default function ProcurementForm({
                 Belum ada data yang ditambahkan
               </h4>
               <p className="mt-2 text-sm text-muted-foreground">
-                Klik tombol di atas untuk menambahkan bahan baku
+                Klik tombol di atas untuk menambahkan item
               </p>
             </div>
           ) : (
@@ -415,11 +631,11 @@ export default function ProcurementForm({
             disabled={isPending || formItems.length === 0}
             size="lg"
           >
-            {isPending ? "Loading..." : "Ajukan Pengadaan Bahan Baku"}
+            {isPending ? "Loading..." : "Ajukan Pengadaan"}
           </Button>
           {formItems.length === 0 && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              Tambahkan minimal 1 pengajuan untuk melanjutkan
+              Tambahkan minimal 1 item untuk melanjutkan
             </p>
           )}
         </div>
