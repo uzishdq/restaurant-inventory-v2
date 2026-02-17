@@ -116,3 +116,15 @@ export const validatedQtySchema = (label: string, min = 0.01, max = 5000) =>
     .refine((val) => Number.parseFloat(val) <= max, {
       message: `${label} maksimal ${max}`,
     });
+
+export const scheduledDateSchema = z
+  .string()
+  .optional()
+  .refine((val) => {
+    if (!val || val === "") return true;
+    return !Number.isNaN(new Date(val).getTime());
+  }, "Tanggal jadwal tidak valid")
+  .refine((val) => {
+    if (!val || val === "") return true;
+    return new Date(val) > new Date();
+  }, "Tanggal jadwal harus lebih dari hari ini");

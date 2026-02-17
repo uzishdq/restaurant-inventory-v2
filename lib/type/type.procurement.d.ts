@@ -80,3 +80,17 @@ export type TReceiptItem = {
   qtyReceived: string;
   qtyDamaged: string;
 };
+
+export type MissingMaterial = {
+  itemName: string;
+  required: number;
+  available: number;
+  deficit: number;
+  unitName: string;
+};
+
+export type StockCheckResult = {
+  canSchedule: boolean;
+  missingMaterials: MissingMaterial[];
+  noBom: boolean;
+};

@@ -6,6 +6,8 @@ import {
   stockStatus,
   typeItems,
 } from "./type/type.helper";
+import { TItemSelect } from "./type/type.item";
+import { MissingMaterial, StockCheckResult } from "./type/type.procurement";
 
 export function getPageTitle(pathname: string): string {
   const title =
@@ -261,4 +263,65 @@ export function getStockStatus(
   }
 
   return "SUFFICIENT";
+}
+
+export function calculateStockCheck(
+  itemDetail: TItemSelect | undefined,
+  qtyTarget: string,
+): StockCheckResult | null {
+  if (!itemDetail) {
+    return { canSchedule: false, missingMaterials: [], noBom: true };
+  }
+
+  if (itemDetail.bomDetails.length === 0) {
+    return { canSchedule: false, missingMaterials: [], noBom: true };
+  }
+
+  const qty = Number.parseFloat(qtyTarget || "0");
+  if (qty === 0) return null;
+
+  const missingMaterials = itemDetail.bomDetails
+    .map((bom) => {
+      const required = Number.parseFloat(bom.qty) * qty;
+      const available = Number.parseFloat(bom.currentStock);
+      const deficit = Math.max(0, required - available);
+
+      if (deficit === 0) return null;
+
+      return {
+        itemName: bom.rawItemName,
+        required,
+        available,
+        deficit,
+        unitName: bom.unitName || "unit",
+      };
+    })
+    .filter((m): m is MissingMaterial => m !== null);
+
+  return {
+    canSchedule: missingMaterials.length === 0,
+    missingMaterials,
+    noBom: false,
+  };
+}
+
+// ════════════════════════════════════════════
+// Summary Stats Helper
+// ════════════════════════════════════════════
+export function getSummaryStats(stockChecks: (StockCheckResult | null)[]): {
+  scheduled: number;
+  draft: number;
+} {
+  return stockChecks.reduce(
+    (acc, check) => {
+      if (!check) return acc;
+      if (check.canSchedule && !check.noBom) {
+        acc.scheduled += 1;
+      } else {
+        acc.draft += 1;
+      }
+      return acc;
+    },
+    { scheduled: 0, draft: 0 },
+  );
 }
