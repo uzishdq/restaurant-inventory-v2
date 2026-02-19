@@ -38,6 +38,8 @@ import type {
 import type { TItemSelect } from "@/lib/type/type.item";
 import { calculateStockCheck, getSummaryStats } from "@/lib/helper";
 import { verifProduction } from "@/lib/server/action-server/production";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/lib/constant";
 
 interface VerifyProductionFormProps {
   data: TProcerement;
@@ -51,6 +53,7 @@ export default function VerifyProductionForm({
   data,
   items,
 }: Readonly<VerifyProductionFormProps>) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const itemMap = useMemo(
@@ -108,12 +111,13 @@ export default function VerifyProductionForm({
                 ? `${summary.scheduled} SCHEDULED, ${summary.draft} DRAFT (menunggu stock)`
                 : `${summary.scheduled} production order siap dijadwalkan`,
           });
+          router.push(ROUTES.AUTH.PRODUCTION.INDEX);
         } else {
           toast.error(result.message);
         }
       });
     },
-    [summary],
+    [summary, router],
   );
 
   return (

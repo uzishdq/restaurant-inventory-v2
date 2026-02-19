@@ -18,6 +18,11 @@ import {
   productionOrderTable,
 } from "@/lib/db/schema";
 import { eq, inArray, sql } from "drizzle-orm";
+import {
+  invalidateProcurement,
+  invalidateProduction,
+} from "../data-server/revalidate";
+import { updateProcurementAfterVerify } from "./procurement";
 
 export const verifProduction = async (values: VerifyProductionValues) => {
   try {
@@ -182,7 +187,11 @@ export const verifProduction = async (values: VerifyProductionValues) => {
       // ════════════════════════════════════════════
       // 6. Update procurement status
       // ════════════════════════════════════════════
+      await updateProcurementAfterVerify(tx, validated.data.procurementId);
     });
+
+    invalidateProcurement();
+    invalidateProduction();
 
     return {
       ok: true,

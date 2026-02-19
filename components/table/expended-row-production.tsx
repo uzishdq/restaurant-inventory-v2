@@ -42,14 +42,14 @@ export function ExpandedRowProduction({
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Dibutuhkan:</span>
                     <span className="font-medium">
-                      {parseFloat(material.qtyRequired).toFixed(2)}{" "}
+                      {Number.parseFloat(material.qtyRequired).toFixed(2)}{" "}
                       {material.unitName}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Digunakan:</span>
                     <span className="font-medium">
-                      {parseFloat(material.qtyUsed).toFixed(2)}{" "}
+                      {Number.parseFloat(material.qtyUsed).toFixed(2)}{" "}
                       {material.unitName}
                     </span>
                   </div>
@@ -84,7 +84,8 @@ export function ExpandedRowProduction({
                     <span className="font-medium">{record.producerName}</span>
                   </div>
                   <Badge variant="secondary" className="text-xs">
-                    {parseFloat(record.qtyProduced).toFixed(2)} {unitName}
+                    {Number.parseFloat(record.qtyProduced).toFixed(2)}{" "}
+                    {unitName}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">

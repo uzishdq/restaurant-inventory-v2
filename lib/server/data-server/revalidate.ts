@@ -59,3 +59,8 @@ export function invalidateItemMov() {
   revalidateTag(CACHE_TAGS.transaction.itemMov.list, { expire: 0 });
   revalidatePath(ROUTES.AUTH.TRANSACTION.MOVEMENT);
 }
+
+export function invalidateNotif() {
+  revalidateTag(CACHE_TAGS.transaction.notification.list, { expire: 0 });
+  revalidatePath(ROUTES.AUTH.ACCOUNT.NOTIFICATION);
+}

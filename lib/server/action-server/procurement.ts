@@ -39,6 +39,7 @@ import {
 import {
   invalidateItem,
   invalidateItemMov,
+  invalidateNotif,
   invalidateProcurement,
   invalidateProduction,
   invalidatePurchase,
@@ -267,6 +268,8 @@ export const verifProcurement = async (values: VerifyProcurementValues) => {
         });
       }
 
+      await updateProcurementAfterVerify(tx, validated.data.procurementId);
+
       // Create USER notification
       const userNotifMessage = templateProcurementApproved({
         userName: procurement.requester.name,
@@ -291,6 +294,7 @@ export const verifProcurement = async (values: VerifyProcurementValues) => {
 
     invalidateProcurement();
     invalidatePurchase();
+    invalidateNotif();
 
     return {
       ok: true,
