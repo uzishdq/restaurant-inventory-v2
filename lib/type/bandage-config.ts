@@ -1,6 +1,7 @@
 import {
   roleType,
   statusProcurement,
+  statusProduction,
   statusPurchase,
   statusTransaction,
   stockStatus,
@@ -17,7 +18,8 @@ export type BadgeCategory =
   | "transactionStatus"
   | "movementType"
   | "transactionType"
-  | "stockStatus";
+  | "stockStatus"
+  | "statusProduction";
 
 export interface BadgeConfig {
   label: string;
@@ -78,6 +80,14 @@ export const BADGE_CONFIG = {
     LOW_STOCK: { label: "Rendah", color: "bg-yellow-500" },
     SUFFICIENT: { label: "Aman", color: "bg-green-500" },
   } satisfies Record<stockStatus, BadgeConfig>,
+
+  statusProduction: {
+    DRAFT: { label: "Draft", color: "bg-gray-500" },
+    SCHEDULED: { label: "Terjadwal", color: "bg-blue-500" },
+    IN_PROGRESS: { label: "Progress", color: "bg-yellow-500" },
+    COMPLETED: { label: "Selesai", color: "bg-green-500" },
+    CANCELLED: { label: "Dibatalkan", color: "bg-red-500" },
+  } satisfies Record<statusProduction, BadgeConfig>,
 } as const;
 
 // Helper function to get badge config safely

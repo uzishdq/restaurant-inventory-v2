@@ -50,7 +50,7 @@ export const ROUTES = {
       DETAIL: (id: string) => `/receipt/detail/${id}`,
     },
     PRODUCTION: {
-      INDEX: "/procurement",
+      INDEX: "/production",
       UPDATE: (id: string) => `/production/update/${id}`,
       DETAIL: (id: string) => `/production/detail/${id}`,
     },
@@ -105,6 +105,9 @@ export const ROUTE_TITLES: { pattern: RegExp; title: string }[] = [
   { pattern: /^\/purchase$/, title: "Pembelian Bahan Baku" },
   { pattern: /^\/purchase\/detail\/[^/]+$/, title: "Detail Pembelian" },
   { pattern: /^\/purchase\/update\/[^/]+$/, title: "Penerimaan Bahan Baku" },
+
+  //Production
+  { pattern: /^\/production$/, title: "Produksi Bahan Baku" },
 
   // Transaction
   { pattern: /^\/transaction\/create-transaction$/, title: "Buat Transaksi" },

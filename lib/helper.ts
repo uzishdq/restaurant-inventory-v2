@@ -60,6 +60,10 @@ export function getFilteredNav(role?: roleType) {
           url: ROUTES.AUTH.PROCUREMENT.INDEX,
         },
         {
+          title: "Produksi Bahan Baku",
+          url: ROUTES.AUTH.PRODUCTION.INDEX,
+        },
+        {
           title: "Pembelian Bahan Baku",
           url: ROUTES.AUTH.PURCHASE.INDEX,
         },

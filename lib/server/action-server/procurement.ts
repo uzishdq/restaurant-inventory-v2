@@ -30,7 +30,7 @@ import {
 } from "@/lib/db/schema";
 import { getPurchaseId } from "../data-server/purchase";
 import { getReceiptId } from "../data-server/receipt";
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import {
   templateProcurementApproved,
   templatePurchaseRequest,
@@ -265,16 +265,6 @@ export const verifProcurement = async (values: VerifyProcurementValues) => {
         });
       }
 
-      await tx
-        .update(procurementTable)
-        .set({
-          status: "ON_PROGRESS",
-          // updatedAt: new Date(),
-        })
-        .where(
-          eq(procurementTable.idProcurement, validated.data.procurementId),
-        );
-
       // Create USER notification
       const userNotifMessage = templateProcurementApproved({
         userName: procurement.requester.name,
@@ -434,5 +424,68 @@ export const verifPurchase = async (values: VerifyPurchaseValues) => {
       ok: false,
       message: LABEL.ERROR.SERVER,
     };
+  }
+};
+
+export const updateProcurementAfterVerify = async (
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  procurementId: string,
+): Promise<void> => {
+  // Get all procurement items with their types
+  const procurementItems = await tx
+    .select({
+      idProcurementItem: procurementItemTable.idProcurementItem,
+      itemType: itemTable.type,
+    })
+    .from(procurementItemTable)
+    .innerJoin(itemTable, eq(procurementItemTable.itemId, itemTable.idItem))
+    .where(eq(procurementItemTable.procurementId, procurementId));
+
+  if (procurementItems.length === 0) return;
+
+  // Separate RAW and WIP items
+  const rawItems = procurementItems.filter(
+    (item) => item.itemType === "RAW_MATERIAL",
+  );
+  const wipItems = procurementItems.filter(
+    (item) => item.itemType === "WORK_IN_PROGRESS",
+  );
+
+  // Check RAW items have purchase items (via purchaseItemTable)
+  let allRawVerified = true;
+  if (rawItems.length > 0) {
+    const rawItemIds = rawItems.map((item) => item.idProcurementItem);
+
+    const purchaseItemCount = await tx
+      .select({
+        count: sql<number>`COUNT(DISTINCT ${purchaseItemTable.procurementItemId})::int`,
+      })
+      .from(purchaseItemTable)
+      .where(inArray(purchaseItemTable.procurementItemId, rawItemIds));
+
+    allRawVerified = (purchaseItemCount[0]?.count ?? 0) === rawItems.length;
+  }
+
+  // Check WIP items have production orders
+  let allWipVerified = true;
+  if (wipItems.length > 0) {
+    const wipItemIds = wipItems.map((item) => item.idProcurementItem);
+
+    const productionCount = await tx
+      .select({
+        count: sql<number>`COUNT(DISTINCT ${productionOrderTable.procurementItemId})::int`,
+      })
+      .from(productionOrderTable)
+      .where(inArray(productionOrderTable.procurementItemId, wipItemIds));
+
+    allWipVerified = (productionCount[0]?.count ?? 0) === wipItems.length;
+  }
+
+  // Update status if all verified
+  if (allRawVerified && allWipVerified) {
+    await tx
+      .update(procurementTable)
+      .set({ status: "ON_PROGRESS" })
+      .where(eq(procurementTable.idProcurement, procurementId));
   }
 };

@@ -182,12 +182,6 @@ export const verifProduction = async (values: VerifyProductionValues) => {
       // ════════════════════════════════════════════
       // 6. Update procurement status
       // ════════════════════════════════════════════
-      await tx
-        .update(procurementTable)
-        .set({ status: "ON_PROGRESS" })
-        .where(
-          eq(procurementTable.idProcurement, validated.data.procurementId),
-        );
     });
 
     return {
