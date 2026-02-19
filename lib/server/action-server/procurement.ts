@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import {
   createProcurementSchema,
+  deleteProductionSchema,
   verifyProcurementSchema,
   VerifyProcurementValues,
   verifyPurchaseSchema,
@@ -45,6 +46,7 @@ import {
 } from "../data-server/revalidate";
 import { generateTransactionID } from "../data-server/transaction";
 import { AllStatus, statusProcurement } from "@/lib/type/type.helper";
+import z from "zod";
 
 export const createProcurement = async (values: CreateProcurementValues) => {
   try {
@@ -487,5 +489,56 @@ export const updateProcurementAfterVerify = async (
       .update(procurementTable)
       .set({ status: "ON_PROGRESS" })
       .where(eq(procurementTable.idProcurement, procurementId));
+  }
+};
+
+export const deleteProcurement = async (
+  values: z.infer<typeof deleteProductionSchema>,
+) => {
+  try {
+    const validateValues = deleteProductionSchema.safeParse(values);
+
+    if (!validateValues.success) {
+      return { ok: false, message: LABEL.ERROR.INVALID_FIELD };
+    }
+
+    const authResult = await requireRole("ADMIN_ONLY");
+
+    if (!authResult.ok) {
+      return {
+        ok: false,
+        message: authResult.message,
+      };
+    }
+
+    const [result] = await db
+      .delete(procurementTable)
+      .where(
+        eq(procurementTable.idProcurement, validateValues.data.procurementId),
+      )
+      .returning();
+
+    if (!result) {
+      return {
+        ok: false,
+        message: LABEL.INPUT.FAILED.DELETE,
+      };
+    }
+
+    invalidateProcurement();
+    invalidateProduction();
+    invalidatePurchase();
+    invalidateReceipt();
+
+    return {
+      ok: true,
+      message: LABEL.INPUT.SUCCESS.DELETE,
+    };
+  } catch (error) {
+    console.error("error delete unit : ", error);
+    return {
+      ok: false,
+      message: LABEL.ERROR.SERVER,
+    };
   }
 };

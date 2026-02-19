@@ -25,6 +25,10 @@ export const createProcurementSchema = z.object({
 
 export type CreateProcurementValues = z.infer<typeof createProcurementSchema>;
 
+export const deleteProductionSchema = z.object({
+  procurementId: IdProcurementSchema,
+});
+
 // Verif Procurement Schema
 export const verifyProcurementSchema = z.object({
   procurementId: IdProcurementSchema,

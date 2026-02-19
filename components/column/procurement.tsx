@@ -28,6 +28,7 @@ import { TProcerement } from "@/lib/type/type.procurement";
 import { ROUTES } from "@/lib/constant";
 import Link from "next/link";
 import { Badge } from "../ui/badge";
+import { ProcurementDeteleForm } from "../form/procurement/delete-procurement";
 
 export const columnProcurement = ({
   rawItems,
@@ -216,7 +217,7 @@ type TDialog = {
 function DialogDelete({ value }: Readonly<TDialog>) {
   return (
     <DialogForm type="delete" title="Delete Bahan Baku">
-      <h1>haii</h1>
+      <ProcurementDeteleForm data={value} />
     </DialogForm>
   );
 }
