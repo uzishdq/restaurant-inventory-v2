@@ -55,3 +55,10 @@ export type TItemMovement = {
   userName: string | null;
   createdAt: Date;
 };
+
+export type TBomDetails = {
+  itemId: string;
+  bomDetailId: string;
+  rawItemId: string;
+  qtyPerUnit: string;
+};

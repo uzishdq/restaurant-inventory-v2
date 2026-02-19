@@ -16,7 +16,6 @@ import {
   ChevronDown,
   ChevronRight,
   CookingPot,
-  Factory,
   MoreHorizontal,
   Package,
   ShoppingCart,
@@ -128,7 +127,7 @@ export const columnProcurement = ({
                 variant="secondary"
                 className="text-xs gap-1 bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
               >
-                <Factory className="h-3 w-3" />
+                <CookingPot className="h-3 w-3" />
                 {totalWip}
               </Badge>
             )}

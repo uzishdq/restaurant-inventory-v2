@@ -11,12 +11,11 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
-  Factory,
   Package,
   AlertTriangle,
   CheckCircle2,
   Info,
-  Clock,
+  CookingPot,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,6 +37,7 @@ import type {
 } from "@/lib/type/type.procurement";
 import type { TItemSelect } from "@/lib/type/type.item";
 import { calculateStockCheck, getSummaryStats } from "@/lib/helper";
+import { verifProduction } from "@/lib/server/action-server/production";
 
 interface VerifyProductionFormProps {
   data: TProcerement;
@@ -70,6 +70,7 @@ export default function VerifyProductionForm({
         notes: item.notes === "-" ? "-" : item.notes,
       })),
     },
+    mode: "onChange",
   });
 
   const { fields } = useFieldArray({
@@ -99,19 +100,17 @@ export default function VerifyProductionForm({
   const onSubmit = useCallback(
     (values: VerifyProductionValues) => {
       startTransition(async () => {
-        //   const result = await verifyProduction(values);
-        //   if (result.ok) {
-        //     toast.success(result.message, {
-        //       description:
-        //         summary.draft > 0
-        //           ? `${summary.scheduled} SCHEDULED, ${summary.draft} DRAFT (menunggu stock)`
-        //           : `${summary.scheduled} production order siap dijadwalkan`,
-        //     });
-        //   } else {
-        //     toast.error(result.message);
-        //   }
-
-        console.log(values);
+        const result = await verifProduction(values);
+        if (result.ok) {
+          toast.success(result.message, {
+            description:
+              summary.draft > 0
+                ? `${summary.scheduled} SCHEDULED, ${summary.draft} DRAFT (menunggu stock)`
+                : `${summary.scheduled} production order siap dijadwalkan`,
+          });
+        } else {
+          toast.error(result.message);
+        }
       });
     },
     [summary],
@@ -119,7 +118,7 @@ export default function VerifyProductionForm({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      {/* Header Info */}
+      {/* Header Info - simplified */}
       <Alert
         variant="default"
         className="border-blue-500 bg-blue-50 dark:bg-blue-900/10"
@@ -130,14 +129,13 @@ export default function VerifyProductionForm({
           <ul className="text-xs space-y-1 list-disc list-inside">
             <li>
               <Badge className="bg-blue-500 text-xs mr-1">SCHEDULED</Badge>
-              Bahan baku mencukupi, siap diproduksi
+              Bahan baku mencukupi, siap untuk diproduksi
             </li>
             <li>
               <Badge variant="outline" className="text-xs mr-1">
                 DRAFT
               </Badge>
-              Bahan baku belum mencukupi, akan otomatis ke SCHEDULED setelah
-              stock tersedia
+              Bahan baku belum mencukupi, perlu pengadaan tambahan
             </li>
           </ul>
         </AlertDescription>
@@ -157,7 +155,7 @@ export default function VerifyProductionForm({
             </p>
           </div>
           <div className="rounded-lg border bg-orange-50 dark:bg-orange-900/10 p-3">
-            <p className="text-xs text-muted-foreground">Akan DRAFT</p>
+            <p className="text-xs text-muted-foreground">DRAFT</p>
             <p className="text-2xl font-bold text-orange-600">
               {summary.draft}
             </p>
@@ -186,16 +184,16 @@ export default function VerifyProductionForm({
       {/* Submit */}
       <div className="sticky bottom-0 rounded-lg border bg-background p-4 shadow-lg space-y-2">
         {summary.draft > 0 && (
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-xs text-center text-muted-foreground mb-2">
             <span className="text-orange-600 font-medium">
               {summary.draft} order
             </span>{" "}
-            akan berstatus DRAFT dan otomatis diperbarui saat stock tersedia
+            memerlukan pengadaan bahan baku tambahan
           </p>
         )}
         <Button type="submit" className="w-full" size="lg" disabled={isPending}>
-          <Factory className="mr-2 h-4 w-4" />
-          {isPending ? "Memproses..." : "Verifikasi Produksi"}
+          <CookingPot className="mr-2 h-4 w-4" />
+          {isPending ? "Loading..." : "Verifikasi Produksi"}
         </Button>
       </div>
     </form>
@@ -203,7 +201,7 @@ export default function VerifyProductionForm({
 }
 
 // ════════════════════════════════════════════
-// Helper Render Functions (Extract nested ternary)
+// Helper Render Functions
 // ════════════════════════════════════════════
 function renderStockStatusIndicator(
   stockCheck: StockCheckResult | null,
@@ -260,15 +258,8 @@ function renderStatusPreview(
     return <Badge className="bg-blue-500">SCHEDULED</Badge>;
   }
 
-  return (
-    <div className="flex items-center gap-1.5">
-      <Badge variant="outline">DRAFT</Badge>
-      <div className="flex items-center gap-1 text-xs text-orange-600">
-        <Clock className="h-3 w-3" />
-        <span>otomatis SCHEDULED saat stock tersedia</span>
-      </div>
-    </div>
-  );
+  // Stock tidak cukup → hanya DRAFT, tanpa keterangan otomatis
+  return <Badge variant="outline">DRAFT</Badge>;
 }
 
 // ════════════════════════════════════════════
@@ -304,7 +295,6 @@ function ProductionOrderCard({
 
   const fieldError = (errors.orders ?? [])[idx];
 
-  // Determine card border color based on stock check
   const cardBorderClass = useMemo(() => {
     if (!stockCheck) return "border";
     if (stockCheck.noBom) return "border-yellow-400";
@@ -315,13 +305,16 @@ function ProductionOrderCard({
   const stockStatusIndicator = renderStockStatusIndicator(stockCheck);
   const statusPreview = renderStatusPreview(stockCheck);
 
+  // ← Scheduled date only enabled if stock is enough
+  const isScheduleDateEnabled = stockCheck?.canSchedule === true;
+
   return (
     <div className={cn("rounded-lg bg-card p-4 space-y-4", cardBorderClass)}>
       {/* Item Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-purple-100 dark:bg-purple-900/20 p-2">
-            <Factory className="h-5 w-5 text-purple-600" />
+            <CookingPot className="h-5 w-5 text-purple-600" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -338,7 +331,7 @@ function ProductionOrderCard({
         </div>
 
         {/* Stock Status Indicator */}
-        {stockCheck && <div className="shrink-0">{stockStatusIndicator}</div>}
+        <div className="shrink-0">{stockStatusIndicator}</div>
       </div>
 
       {/* Form Fields */}
@@ -371,7 +364,7 @@ function ProductionOrderCard({
           )}
         />
 
-        {/* Scheduled Date */}
+        {/* Scheduled Date - Only enabled if stock is enough */}
         <Controller
           name={`orders.${idx}.scheduledDate`}
           control={control}
@@ -379,16 +372,22 @@ function ProductionOrderCard({
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>
                 Tanggal & Waktu Jadwal{" "}
-                <span className="text-xs text-muted-foreground font-normal">
-                  (opsional)
-                </span>
+                {!isScheduleDateEnabled && (
+                  <span className="text-xs text-muted-foreground font-normal">
+                    (tidak tersedia)
+                  </span>
+                )}
               </FieldLabel>
               <Input
                 {...field}
                 type="datetime-local"
+                disabled={!isScheduleDateEnabled}
                 min={new Date().toISOString().slice(0, 16)}
                 aria-invalid={fieldState.invalid}
-                className="font-mono"
+                className={cn(
+                  "font-mono",
+                  !isScheduleDateEnabled && "opacity-50 cursor-not-allowed",
+                )}
               />
               <FieldError
                 errors={fieldState.error ? [fieldState.error] : undefined}
@@ -464,10 +463,10 @@ function ProductionOrderCard({
                         {material.itemName}
                       </td>
                       <td className="py-2 text-right text-muted-foreground">
-                        {material.available.toFixed(2)}
+                        {material.available.toFixed(2)} {material.unitName}
                       </td>
                       <td className="py-2 text-right text-muted-foreground">
-                        {material.required.toFixed(2)}
+                        {material.required.toFixed(2)} {material.unitName}
                       </td>
                       <td className="py-2 text-right font-bold text-orange-700">
                         {material.deficit.toFixed(2)} {material.unitName}
@@ -478,10 +477,14 @@ function ProductionOrderCard({
               </table>
             </div>
 
+            {/* Simple note - no mention of auto schedule */}
             <div className="mt-3 pt-3 border-t border-orange-200">
               <p className="text-xs font-medium text-orange-800 dark:text-orange-200 flex items-center gap-1.5">
-                <Clock className="h-3 w-3" />
-                Production order akan otomatis SCHEDULED setelah stock tersedia
+                <span>💡</span>
+                <span>
+                  Lengkapi pengadaan bahan baku terlebih dahulu sebelum memulai
+                  produksi
+                </span>
               </p>
             </div>
           </div>
@@ -496,7 +499,7 @@ function ProductionOrderCard({
           <AlertTriangle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800 dark:text-yellow-500">
             Item ini belum memiliki BOM. Harap tambahkan BOM terlebih dahulu
-            agar production order bisa dijadwalkan.
+            agar produksi bisa dijadwalkan.
           </AlertDescription>
         </Alert>
       )}
